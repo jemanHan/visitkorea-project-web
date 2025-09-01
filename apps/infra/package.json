@@ -1,0 +1,28 @@
+{
+  "name": "infra",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "cdk": "cdk",
+    "cdk:diff": "cdk diff",
+    "cdk:deploy": "cdk deploy",
+    "cdk:outputs": "cdk synth --quiet > dist/template.json && node scripts/print-outputs.js"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.153.0",
+    "constructs": "^10.3.0",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2"
+  }
+}
+
+
+
+
+
+
