@@ -31,12 +31,6 @@ export default function TopBar() {
           </form>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/together" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            함께하기
-          </Link>
-          <Link to="/schedule" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            스케줄
-          </Link>
           <Link to="/mypage" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
             마이페이지
           </Link>

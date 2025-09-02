@@ -11,41 +11,7 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
   const { getSchedulesForDate, addSchedule, deleteSchedule, updateSchedule } = useSchedule();
   const schedules = getSchedulesForDate(selectedDate);
 
-  // 초기 샘플 데이터 추가 (스케줄이 없을 때만)
-  React.useEffect(() => {
-    if (schedules.length === 0) {
-      const sampleSchedules = [
-        {
-          startTime: '8:00',
-          endTime: '11:00',
-          googleApiData: '경복궁',
-          remarks: '산책 투어'
-        },
-        {
-          startTime: '11:00',
-          endTime: '13:00',
-          googleApiData: '남산타워',
-          remarks: '등산'
-        },
-        {
-          startTime: '13:00',
-          endTime: '14:00',
-          googleApiData: '남산돈가스',
-          remarks: '점심'
-        },
-        {
-          startTime: '14:00',
-          endTime: '17:00',
-          googleApiData: '국립박물관',
-          remarks: '관광'
-        }
-      ];
 
-      sampleSchedules.forEach(schedule => {
-        addSchedule(selectedDate, schedule);
-      });
-    }
-  }, [selectedDate, schedules.length, addSchedule]);
 
   // initialPlaceName이 변경될 때 newSchedule의 googleApiData 업데이트
   useEffect(() => {

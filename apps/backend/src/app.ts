@@ -8,6 +8,7 @@ import { prisma } from "@db/client";
 import { authHook } from "./auth/jwt.js";
 import { authRoutes } from "./routes/auth.js";
 import { likesRoutes } from "./routes/likes.js";
+import { usersRoutes } from "./routes/users.js";
 
 // 캐시 TTL 설정
 const DETAIL_TTL = Number(process.env.DETAIL_TTL_MS || 604800000);
@@ -38,6 +39,7 @@ export function createApp() {
 	// Register routes
 	app.register(authRoutes);
 	app.register(likesRoutes);
+	app.register(usersRoutes);
 	
 	// 요청 제한을 위한 간단한 캐시 - 캐시 크기 제한 추가
 	const requestCache = new Map<string, { data: any; timestamp: number }>();

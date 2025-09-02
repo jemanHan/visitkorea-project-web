@@ -96,7 +96,6 @@ const Calendar: React.FC<CalendarProps> = ({ date, selectedDate, onDateSelect })
       {/* 달력 그리드 */}
       <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((dayInfo, index) => {
-          const hasSchedule = dayInfo.isCurrentMonth && getSchedulesForDate(dayInfo.date).length > 0;
           return (
             <button
               key={index}
@@ -114,9 +113,6 @@ const Calendar: React.FC<CalendarProps> = ({ date, selectedDate, onDateSelect })
               `}
             >
               {dayInfo.day}
-              {hasSchedule && (
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
-              )}
             </button>
           );
         })}

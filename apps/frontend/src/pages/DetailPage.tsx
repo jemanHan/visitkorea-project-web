@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/http.js'
 import { isAuthenticated } from '../api/auth.js'
+import { checkLikeStatus, addLike, removeLike } from '../api/likes.js'
 
 type SortOption = 'relevance' | 'latest';
 
@@ -69,8 +70,22 @@ export default function DetailPage() {
   const [likedLoading, setLikedLoading] = useState(false)
 
   useEffect(() => {
-    if (id) void fetchDetail(id)
+    if (id) {
+      void fetchDetail(id)
+      void checkLikeStatusOnMount(id)
+    }
   }, [id])
+
+  async function checkLikeStatusOnMount(placeId: string) {
+    if (!isAuthenticated()) return;
+    
+    try {
+      const status = await checkLikeStatus(placeId);
+      setLiked(status.liked);
+    } catch (error) {
+      console.error('Check like status error:', error);
+    }
+  }
 
   async function fetchDetail(placeId: string) {
     try {
@@ -105,25 +120,28 @@ export default function DetailPage() {
 
     setLikedLoading(true);
     try {
-      // Extract tags from categories or types
-      const raw = data.categories ?? data.types ?? [];
-      const tags = Array.from(new Set(raw.map(t => String(t).toLowerCase().trim()))).slice(0, 8);
+      if (liked) {
+        // 좋아요 취소
+        await removeLike(id);
+        setLiked(false);
+      } else {
+        // 좋아요 추가
+        const raw = data.categories ?? data.types ?? [];
+        const tags = Array.from(new Set(raw.map(t => String(t).toLowerCase().trim()))).slice(0, 8);
 
-      await api('/v1/likes', {
-        method: 'POST',
-        body: {
+        await addLike({
           placeId: id,
           name: typeof data.displayName === 'object' ? data.displayName?.text : data.displayName,
           address: data.formattedAddress,
           rating: data.rating,
           tags
-        }
-      });
+        });
 
-      setLiked(true);
+        setLiked(true);
+      }
     } catch (error) {
       console.error('Like error:', error);
-      alert('좋아요 저장에 실패했습니다.');
+      alert(liked ? '좋아요 취소에 실패했습니다.' : '좋아요 저장에 실패했습니다.');
     } finally {
       setLikedLoading(false);
     }
@@ -134,7 +152,18 @@ export default function DetailPage() {
   const placeName = typeof data.displayName === 'object' ? data.displayName?.text : data.displayName ?? '이름 없음';
 
   return (
-    <div className="container px-4 py-8 mx-auto">
+    <div className="container px-4 py-8 mx-auto relative">
+      {/* 뒤로가기 버튼 - 우측 상단 고정 */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed right-4 z-40 btn btn-circle btn-sm bg-white/90 backdrop-blur shadow-lg hover:bg-white"
+        style={{ top: '6rem' }}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      
       <div className="shadow-xl card bg-base-100">
         {/* Main Photo with Hover Effect */}
         {data.photos && data.photos.length > 0 && (
@@ -230,23 +259,12 @@ export default function DetailPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-4">
-            {data.location && (
-              <button
-                onClick={() => {
-                  const url = `/nearby-recommendations?lat=${data.location.latitude}&lng=${data.location.longitude}&placeName=${encodeURIComponent(placeName)}`;
-                  window.open(url, '_blank');
-                }}
-                className="btn btn-outline btn-sm"
-              >
-                🗺️ 주변 추천
-              </button>
-            )}
             <button 
               onClick={handleLike}
-              disabled={likedLoading || liked}
+              disabled={likedLoading}
               className={`btn btn-sm ${liked ? 'btn-success' : 'btn-outline'}`}
             >
-              {likedLoading ? '💾 저장 중...' : liked ? '❤️ 좋아요 완료' : '🤍 좋아요'}
+              {likedLoading ? '💾 처리 중...' : liked ? '❤️ 좋아요 완료' : '🤍 좋아요'}
             </button>
             <button className="btn btn-primary btn-sm">
               📅 스케줄에 추가

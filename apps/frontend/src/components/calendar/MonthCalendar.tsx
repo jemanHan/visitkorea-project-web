@@ -121,20 +121,7 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
                   {date.getDate()}
                 </span>
                 
-                {/* 스케줄 표시 (예시) */}
-                {isCurrentMonth(date) && Math.random() > 0.7 && (
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                )}
               </div>
-              
-              {/* 스케줄 내용 (예시) */}
-              {isCurrentMonth(date) && date.getDate() % 7 === 0 && (
-                <div className="mt-1">
-                  <div className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded">
-                    경복궁 투어
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -145,10 +132,6 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
           <span>오늘</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-          <span>스케줄 있음</span>
         </div>
       </div>
     </div>

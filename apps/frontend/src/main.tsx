@@ -6,20 +6,23 @@ import Home from './pages/Home'
 import DetailPage from './pages/DetailPage'
 import MyPage from './pages/MyPage'
 import SchedulePage from './pages/SchedulePage'
-import TogetherPage from './pages/TogetherPage'
-import NearbyRecommendationsPage from './pages/NearbyRecommendationsPage'
+
 import Signup from './pages/Signup'
 import Login from './pages/Login'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const router = createBrowserRouter([
   { path: '/', element: <Home /> },
   { path: '/places/:id', element: <DetailPage /> },
-  { path: '/mypage', element: <MyPage /> },
-  { path: '/schedule', element: <SchedulePage /> },
-  { path: '/together', element: <TogetherPage /> },
-  { path: '/nearby-recommendations', element: <NearbyRecommendationsPage /> },
   { path: '/signup', element: <Signup /> },
   { path: '/login', element: <Login /> },
+      {
+      element: <ProtectedRoute />,
+      children: [
+        { path: '/mypage', element: <MyPage /> },
+        { path: '/schedule', element: <SchedulePage /> },
+      ]
+    }
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
