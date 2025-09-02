@@ -42,6 +42,8 @@ type PlaceDetails = {
   photos?: { name: string; widthPx?: number; heightPx?: number }[]
   reviews?: Review[]
   location?: { latitude: number; longitude: number }
+  categories?: string[]
+  types?: string[]
 }
 
 const MOCK_DETAIL: PlaceDetails = {
@@ -134,7 +136,7 @@ export default function DetailPage() {
           name: typeof data.displayName === 'object' ? data.displayName?.text : data.displayName,
           address: data.formattedAddress,
           rating: data.rating,
-          tags
+          tags: tags as string[]
         });
 
         setLiked(true);

@@ -78,7 +78,7 @@ const NearbyRecommendationsPage: React.FC = () => {
       
       setRecommendations(prev => ({
         ...prev,
-        [category]: data
+        [category]: data as Place[]
       }));
     } catch (error) {
       console.error(`Error fetching ${category}:`, error);
