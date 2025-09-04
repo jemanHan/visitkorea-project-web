@@ -2,9 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/shared-types" },
-    { "path": "apps/backend" },
-    { "path": "apps/frontend" },
-    { "path": "apps/infra" }
+    { "path": "apps/frontend" }
   ]
 }
 
