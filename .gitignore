@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Environment variables
-.env
+# .env  # 주석 처리 - 로컬 개발용으로 포함
 .env.local
 .env.development.local
 .env.test.local
@@ -49,7 +49,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+# .env  # 주석 처리 - 로컬 개발용으로 포함
 
 # IDE
 .vscode/
