@@ -66,3 +66,21 @@ Thumbs.db
 
 # AWS
 .aws/
+
+# VisitKorea 프로젝트 특정 파일들
+# 로그 파일들
+/var/log/visitkorea-*.log
+
+# nginx 설정 백업
+/etc/nginx/conf.d/visitkorea.conf.backup*
+
+# 임시 파일들
+*.tmp
+*.temp
+
+# 빌드 캐시
+.cache/
+.turbo/
+
+# TypeScript 빌드 정보
+*.tsbuildinfo

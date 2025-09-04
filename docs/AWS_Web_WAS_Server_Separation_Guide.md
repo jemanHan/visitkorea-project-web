@@ -25,7 +25,7 @@
 
 ### 네트워크 구성
 - **웹서버**: 3.38.189.87 (Public IP)
-- **WAS 서버**: 3.39.6.173 (Public IP)
+- **WAS 서버**: 3.38.252.162 (Public IP)
 - **통신**: 웹서버 → WAS 서버 (포트 3002)
 
 ## 🚀 단계별 구현 가이드
@@ -218,7 +218,7 @@ sudo cp /etc/nginx/conf.d/visitkorea.conf /etc/nginx/conf.d/visitkorea.conf.back
 #### 5.2 프록시 설정 변경
 ```bash
 # WAS 서버 IP로 프록시 설정 변경
-sudo sed -i 's|http://127.0.0.1:3002|http://3.39.6.173:3002|g' /etc/nginx/conf.d/visitkorea.conf
+sudo sed -i 's|http://127.0.0.1:3002|http://3.38.252.162:3002|g' /etc/nginx/conf.d/visitkorea.conf
 ```
 
 #### 5.3 변경된 설정 확인
@@ -240,7 +240,7 @@ server {
     }
 
     location /v1/ {
-        proxy_pass http://3.39.6.173:3002;
+        proxy_pass http://3.38.252.162:3002;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -267,7 +267,7 @@ sudo systemctl status nginx
 #### 6.1 WAS 서버 직접 연결 테스트
 ```bash
 # 웹서버에서 WAS 서버 연결 테스트
-curl -v http://3.39.6.173:3002/health
+curl -v http://3.38.252.162:3002/health
 ```
 
 **예상 결과**: HTTP 200 OK, `{"ok":true}`
@@ -349,7 +349,7 @@ sudo tail -f /var/log/nginx/access.log
 - 인프라 코드
 - Docker 설정
 
-### WAS 서버 (3.39.6.173)
+### WAS 서버 (3.38.252.162)
 **역할**: 백엔드 API + 데이터베이스
 **구성요소**:
 - Node.js + Fastify
