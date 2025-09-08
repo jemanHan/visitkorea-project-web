@@ -76,37 +76,36 @@ for i in {1..30}; do
     sleep 2
 done
 
-# 7. Prisma 설정 (있다면)
-log_info "Prisma 설정 확인 중..."
-if [ -f "apps/backend/prisma/schema.prisma" ]; then
-    log_info "Prisma 스키마를 발견했습니다. 설정을 진행합니다..."
+# 7. 프론트엔드 빌드 테스트
+log_info "프론트엔드 빌드 테스트 중..."
+if [ -d "apps/frontend" ]; then
+    cd apps/frontend
     
-    # Prisma generate
-    log_info "Prisma generate 실행 중..."
-    docker-compose -f docker-compose.prod.yml run --rm backend npx prisma generate
+    # 빌드 테스트
+    if npm run build > /dev/null 2>&1; then
+        log_info "✅ 프론트엔드 빌드 테스트 성공"
+    else
+        log_warn "⚠️  프론트엔드 빌드 테스트 실패"
+    fi
     
-    # Prisma migrate
-    log_info "Prisma migrate 실행 중..."
-    docker-compose -f docker-compose.prod.yml run --rm backend npx prisma migrate deploy
-    
-    log_info "✅ Prisma 설정 완료"
+    cd ../..
 else
-    log_info "Prisma 스키마를 찾을 수 없습니다. 건너뜁니다."
+    log_warn "⚠️  apps/frontend 디렉토리를 찾을 수 없습니다."
 fi
 
 # 8. 프로덕션 서비스 시작
 log_info "프로덕션 서비스 시작 중..."
-docker-compose -f docker-compose.prod.yml up -d backend frontend nginx
+docker-compose -f docker-compose.prod.yml up -d frontend nginx
 
 # 9. 서비스 상태 확인
 log_info "서비스 상태 확인 중..."
 sleep 10
 
-# 백엔드 확인
-if curl -s http://localhost:3002/health > /dev/null 2>&1 || curl -s http://localhost:3002 > /dev/null 2>&1; then
-    log_info "✅ 백엔드 서비스 정상"
+# nginx 확인
+if curl -s http://localhost:80 > /dev/null 2>&1; then
+    log_info "✅ nginx 서비스 정상"
 else
-    log_warn "⚠️  백엔드 서비스 확인 필요"
+    log_warn "⚠️  nginx 서비스 확인 필요"
 fi
 
 # nginx 확인
@@ -122,7 +121,7 @@ echo "=========================================="
 
 log_info "접속 정보:"
 echo "  🌐 웹사이트: http://localhost"
-echo "  🔧 백엔드 API: http://localhost:3002"
+echo "  🔧 백엔드 API: http://13.209.108.148:3002"
 echo "  🗄️  데이터베이스: localhost:5432"
 echo ""
 

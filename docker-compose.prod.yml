@@ -19,26 +19,6 @@ services:
       timeout: 3s
       retries: 20
 
-  backend:
-    build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
-      target: production
-    container_name: vk-backend-prod
-    restart: unless-stopped
-    env_file:
-      - ./apps/backend/.env.docker
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-vk}:${POSTGRES_PASSWORD:-vkpass}@db:5432/${POSTGRES_DB:-visitkorea}?schema=public
-      NODE_ENV: production
-      PORT: ${PORT:-3002}
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "3002:3002"
-    command: npm run start
-
   frontend:
     build:
       context: ./apps/frontend
@@ -49,7 +29,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - db
 
   nginx:
     image: nginx:alpine
@@ -63,7 +43,6 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
       - frontend
-      - backend
     command: nginx -g "daemon off;"
 
 volumes:
