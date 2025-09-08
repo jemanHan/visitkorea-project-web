@@ -4,13 +4,14 @@
 
 ## 🚀 빠른 시작 (1분 설정)
 
-### 1. Docker 설치
-- **Windows**: [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
-- **macOS**: [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
-- **Linux**: [Docker Engine](https://docs.docker.com/engine/install/)
+### 1. Docker 설치 (Windows)
+- **Docker Desktop for Windows**: [다운로드 링크](https://docs.docker.com/desktop/install/windows-install/)
+- **설치 후 Docker Desktop 실행 필수**
+- **WSL 2 백엔드 권장** (Windows 10/11)
 
-### 2. 프로젝트 클론 및 실행
+### 2. 프로젝트 클론 및 실행 (Windows)
 ```bash
+# Git Bash 또는 PowerShell에서 실행
 # 프로젝트 클론
 git clone https://github.com/jemanHan/visitkorea-project-web.git
 cd visitkorea-project-web
@@ -18,6 +19,11 @@ cd visitkorea-project-web
 # 한번에 모든 설정 및 실행
 ./scripts/setup-docker.sh
 ```
+
+**Windows 주의사항:**
+- Git Bash 또는 PowerShell 사용
+- Docker Desktop이 실행 중이어야 함
+- WSL 2가 활성화되어 있어야 함
 
 ### 3. 접속
 - **프론트엔드**: http://localhost:5173
@@ -44,8 +50,9 @@ cd visitkorea-project-web
 
 ## 🛠️ 유용한 명령어
 
-### 서비스 관리
+### 서비스 관리 (Windows)
 ```bash
+# Git Bash 또는 PowerShell에서 실행
 # 서비스 상태 확인
 docker-compose ps
 
@@ -62,8 +69,9 @@ docker-compose down
 docker-compose down -v
 ```
 
-### 개발 모드
+### 개발 모드 (Windows)
 ```bash
+# Git Bash 또는 PowerShell에서 실행
 # 백엔드만 재시작 (코드 변경 시)
 docker-compose restart backend
 
@@ -110,12 +118,12 @@ docker-compose logs db
 docker-compose restart db
 ```
 
-### 포트 충돌 오류
+### 포트 충돌 오류 (Windows)
 ```bash
-# 사용 중인 포트 확인
-netstat -tulpn | grep :5432
-netstat -tulpn | grep :3002
-netstat -tulpn | grep :5173
+# PowerShell에서 사용 중인 포트 확인
+netstat -ano | findstr :5432
+netstat -ano | findstr :3002
+netstat -ano | findstr :5173
 
 # 기존 서비스 종료 후 재시작
 docker-compose down
@@ -124,8 +132,9 @@ docker-compose up -d
 
 ## 📊 데이터베이스 관리
 
-### Prisma 마이그레이션
+### Prisma 마이그레이션 (Windows)
 ```bash
+# Git Bash 또는 PowerShell에서 실행
 # 새로운 마이그레이션 생성
 docker-compose run --rm backend npx prisma migrate dev
 
@@ -136,8 +145,9 @@ docker-compose run --rm backend npx prisma migrate deploy
 docker-compose run --rm backend npx prisma studio
 ```
 
-### 데이터베이스 백업/복원
+### 데이터베이스 백업/복원 (Windows)
 ```bash
+# Git Bash 또는 PowerShell에서 실행
 # 백업
 docker exec vk-postgres pg_dump -U vk visitkorea > backup.sql
 
@@ -154,14 +164,21 @@ docker exec -i vk-postgres psql -U vk visitkorea < backup.sql
 - ✅ Google API 키 설정
 - ✅ Prisma 데이터베이스 스키마
 
-## 📞 지원
+## 📞 지원 (Windows)
 
 문제가 발생하면 다음을 확인해주세요:
-1. Docker Desktop이 실행 중인지 확인
-2. 포트 5432, 3002, 5173이 사용 가능한지 확인
-3. Google API 키 제한 설정 확인
-4. `docker-compose logs`로 오류 로그 확인
+1. **Docker Desktop이 실행 중인지 확인** (시스템 트레이에 Docker 아이콘)
+2. **WSL 2가 활성화되어 있는지 확인**
+3. **포트 5432, 3002, 5173이 사용 가능한지 확인**
+4. **Google API 키 제한 설정 확인**
+5. **`docker-compose logs`로 오류 로그 확인**
+
+### Windows 특별 주의사항:
+- **Git Bash 또는 PowerShell 사용** (명령 프롬프트는 권장하지 않음)
+- **Docker Desktop이 백그라운드에서 실행 중이어야 함**
+- **Windows Defender 방화벽에서 Docker 허용**
+- **WSL 2 백엔드 사용 권장**
 
 ---
 
-**🎉 이제 팀원들이 모두 동일한 환경에서 개발할 수 있습니다!**
+**🎉 이제 Windows 팀원들이 모두 동일한 환경에서 개발할 수 있습니다!**
