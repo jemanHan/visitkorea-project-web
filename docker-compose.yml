@@ -53,7 +53,7 @@ services:
     env_file:
       - ./apps/frontend/.env.docker
     environment:
-      VITE_API_BASE_URL: http://localhost:3002
+      VITE_API_BASE_URL: http://backend:3002
       CHOKIDAR_USEPOLLING: "true"  # Windows 파일변경 감지 이슈 대응
     depends_on:
       - backend

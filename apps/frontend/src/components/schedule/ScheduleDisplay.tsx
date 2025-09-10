@@ -1,52 +1,121 @@
 import React, { useState, useEffect } from 'react';
-import { useSchedule, ScheduleItem } from '../../hooks/useSchedule';
+import { ScheduleItem } from '../../hooks/useSchedule';
 import ScheduleEditModal from './ScheduleEditModal';
+import TimeInput from './TimeInput';
+import { scheduleApi } from '../../lib/api';
 
 interface ScheduleDisplayProps {
   selectedDate: Date;
   initialPlaceName?: string;
+  schedules?: any[];
+  onScheduleUpdate?: (date: Date) => void;
 }
 
-const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initialPlaceName }) => {
-  const { getSchedulesForDate, addSchedule, deleteSchedule, updateSchedule } = useSchedule();
-  const schedules = getSchedulesForDate(selectedDate);
+const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ 
+  selectedDate, 
+  initialPlaceName, 
+  schedules: propSchedules = [], 
+  onScheduleUpdate 
+}) => {
+  // API에서 받은 스케줄만 사용 (로컬 스케줄 사용 안함)
+  const schedules = propSchedules;
 
 
 
-  // initialPlaceName이 변경될 때 newSchedule의 googleApiData 업데이트
+  // initialPlaceName이 변경될 때 newSchedule의 title 업데이트
   useEffect(() => {
     if (initialPlaceName) {
       setNewSchedule(prev => ({
         ...prev,
-        googleApiData: initialPlaceName
+        title: initialPlaceName
       }));
     }
   }, [initialPlaceName]);
 
-  const [newSchedule, setNewSchedule] = useState<Omit<ScheduleItem, 'id'>>({
+  const [newSchedule, setNewSchedule] = useState<Omit<ScheduleItem, 'id' | 'userId' | 'date' | 'order' | 'createdAt' | 'updatedAt'>>({
     startTime: '',
     endTime: '',
-    googleApiData: initialPlaceName || '',
+    title: '',
     remarks: ''
   });
 
   const [editingSchedule, setEditingSchedule] = useState<ScheduleItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleAddSchedule = () => {
-    if (newSchedule.startTime && newSchedule.endTime) {
-      addSchedule(selectedDate, newSchedule);
-      setNewSchedule({
-        startTime: '',
-        endTime: '',
-        googleApiData: '',
-        remarks: ''
-      });
+  const handleAddSchedule = async () => {
+    if (newSchedule.startTime && newSchedule.endTime && newSchedule.title) {
+      try {
+        // 시작 시간과 종료 시간이 같으면 종료 시간을 1시간 후로 설정
+        let endTime = newSchedule.endTime;
+        if (newSchedule.startTime === newSchedule.endTime) {
+          const [hours, minutes] = newSchedule.startTime.split(':').map(Number);
+          const startMinutes = hours * 60 + minutes;
+          const endMinutes = startMinutes + 60; // 1시간 추가
+          const endHours = Math.floor(endMinutes / 60);
+          const endMins = endMinutes % 60;
+          endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+          
+          // 사용자에게 알림
+          alert(`시작 시간과 종료 시간이 같아서 종료 시간을 ${endTime}으로 자동 설정했습니다.`);
+        }
+
+        // API를 통한 스케줄 추가
+        const scheduleData = {
+          date: selectedDate.toISOString().split('T')[0],
+          startTime: newSchedule.startTime,
+          endTime: endTime,
+          title: newSchedule.title,
+          remarks: newSchedule.remarks || null
+        };
+        
+        // 디버깅 로그 추가
+        console.log('=== 스케줄 생성 디버깅 ===');
+        console.log('선택된 날짜:', selectedDate);
+        console.log('날짜 형식:', scheduleData.date);
+        console.log('시작 시간:', scheduleData.startTime);
+        console.log('종료 시간:', scheduleData.endTime);
+        console.log('제목:', scheduleData.title);
+        console.log('비고:', scheduleData.remarks);
+        console.log('전체 데이터:', JSON.stringify(scheduleData, null, 2));
+        
+        await scheduleApi.createSchedule(scheduleData);
+        
+        // 부모 컴포넌트에 업데이트 알림
+        if (onScheduleUpdate) {
+          onScheduleUpdate(selectedDate);
+        }
+        
+        setNewSchedule({
+          startTime: '',
+          endTime: '',
+          title: '',
+          remarks: ''
+        });
+        
+        alert('스케줄이 추가되었습니다!');
+      } catch (error) {
+        console.error('스케줄 추가 실패:', error);
+        const errorMessage = error instanceof Error ? error.message : '스케줄 추가에 실패했습니다.';
+        alert(`스케줄 추가 실패: ${errorMessage}`);
+      }
     }
   };
 
-  const handleDeleteSchedule = (id: number) => {
-    deleteSchedule(selectedDate, id);
+  const handleDeleteSchedule = async (id: number) => {
+    try {
+      // API를 통한 스케줄 삭제
+      await scheduleApi.deleteSchedule(id.toString());
+      
+      // 로컬 상태 업데이트 제거 (API만 사용)
+      
+      // 부모 컴포넌트에 업데이트 알림
+      if (onScheduleUpdate) {
+        onScheduleUpdate(selectedDate);
+      }
+    } catch (error) {
+      console.error('스케줄 삭제 실패:', error);
+      alert('스케줄 삭제에 실패했습니다.');
+    }
   };
 
   const handleEditSchedule = (schedule: ScheduleItem) => {
@@ -54,13 +123,28 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (schedule: ScheduleItem) => {
-    updateSchedule(selectedDate, schedule.id, {
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
-      googleApiData: schedule.googleApiData,
-      remarks: schedule.remarks
-    });
+  const handleSaveEdit = async (schedule: ScheduleItem) => {
+    try {
+      // API를 통한 스케줄 수정
+      const scheduleData = {
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        title: schedule.title,
+        remarks: schedule.remarks
+      };
+      
+      await scheduleApi.updateSchedule(schedule.id, scheduleData);
+      
+      // 로컬 상태 업데이트 제거 (API만 사용)
+      
+      // 부모 컴포넌트에 업데이트 알림
+      if (onScheduleUpdate) {
+        onScheduleUpdate(selectedDate);
+      }
+    } catch (error) {
+      console.error('스케줄 수정 실패:', error);
+      alert('스케줄 수정에 실패했습니다.');
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -96,7 +180,7 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
               </th>
               <th className="text-left py-3 px-2">
                 <div className="bg-pink-100 text-pink-800 px-3 py-1 rounded-md text-sm font-medium">
-                  구글 API 데이터
+                  제목
                 </div>
               </th>
               <th className="text-left py-3 px-2">
@@ -108,10 +192,10 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
             </tr>
           </thead>
           <tbody>
-            {schedules.map((schedule) => (
+            {schedules.map((schedule, index) => (
               <tr key={schedule.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="py-3 px-2 text-sm font-medium text-gray-700">
-                  {schedule.id}
+                  {index + 1}
                 </td>
                 <td className="py-3 px-2">
                   <div className="bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm font-medium">
@@ -125,7 +209,7 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
                 </td>
                 <td className="py-3 px-2">
                   <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-md text-sm font-medium">
-                    {schedule.googleApiData}
+                    {schedule.title}
                   </div>
                 </td>
                 <td className="py-3 px-2">
@@ -180,35 +264,46 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
       {/* 새 스케줄 추가 폼 */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="text-lg font-medium text-gray-800 mb-4">새 스케줄 추가</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-            type="time"
-            value={newSchedule.startTime}
-            onChange={(e) => setNewSchedule({...newSchedule, startTime: e.target.value})}
+            type="text"
+            value={newSchedule.title}
+            onChange={(e) => setNewSchedule({...newSchedule, title: e.target.value})}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="시작 시간"
-          />
-          <input
-            type="time"
-            value={newSchedule.endTime}
-            onChange={(e) => setNewSchedule({...newSchedule, endTime: e.target.value})}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="종료 시간"
+            placeholder="스케줄 제목 *"
+            required
           />
           <input
             type="text"
-            value={newSchedule.googleApiData}
-            onChange={(e) => setNewSchedule({...newSchedule, googleApiData: e.target.value})}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="구글 API 데이터"
-          />
-          <input
-            type="text"
-            value={newSchedule.remarks}
+            value={newSchedule.remarks || ''}
             onChange={(e) => setNewSchedule({...newSchedule, remarks: e.target.value})}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="비고"
           />
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              시작 시간
+            </label>
+            <TimeInput
+              value={newSchedule.startTime}
+              onChange={(time) => setNewSchedule({...newSchedule, startTime: time})}
+              placeholder="시작 시간"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              종료 시간
+            </label>
+            <TimeInput
+              value={newSchedule.endTime}
+              onChange={(time) => setNewSchedule({...newSchedule, endTime: time})}
+              placeholder="종료 시간"
+              required
+            />
+          </div>
         </div>
         <button
           onClick={handleAddSchedule}

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/http.js'
 import { isAuthenticated } from '../api/auth.js'
 import { checkLikeStatus, addLike, removeLike } from '../api/likes.js'
+import DateSelectModal from '../components/schedule/DateSelectModal'
 
 type SortOption = 'relevance' | 'latest';
 
@@ -70,6 +71,7 @@ export default function DetailPage() {
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set())
   const [liked, setLiked] = useState(false)
   const [likedLoading, setLikedLoading] = useState(false)
+  const [showDateModal, setShowDateModal] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -147,6 +149,16 @@ export default function DetailPage() {
     } finally {
       setLikedLoading(false);
     }
+  }
+
+  function handleAddToSchedule() {
+    setShowDateModal(true)
+  }
+
+  function handleDateSelect(date: Date) {
+    const placeName = data?.displayName?.text || '장소'
+    const dateString = date.toISOString().split('T')[0]
+    navigate(`/schedule?place=${encodeURIComponent(placeName)}&date=${dateString}`)
   }
 
   if (!data) return <div className="p-8">불러오는 중...</div>
@@ -268,7 +280,10 @@ export default function DetailPage() {
             >
               {likedLoading ? '💾 처리 중...' : liked ? '❤️ 좋아요 완료' : '🤍 좋아요'}
             </button>
-            <button className="btn btn-primary btn-sm">
+            <button 
+              onClick={handleAddToSchedule}
+              className="btn btn-primary btn-sm"
+            >
               📅 스케줄에 추가
             </button>
           </div>
@@ -639,6 +654,14 @@ export default function DetailPage() {
           </div>
         </div>
       )}
+
+      {/* 날짜 선택 모달 */}
+      <DateSelectModal
+        isOpen={showDateModal}
+        onClose={() => setShowDateModal(false)}
+        onDateSelect={handleDateSelect}
+        placeName={placeName}
+      />
     </div>
   )
 }

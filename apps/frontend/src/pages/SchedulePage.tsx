@@ -4,6 +4,8 @@ import CalendarSelector from '../components/schedule/CalendarSelector';
 import ScheduleDisplay from '../components/schedule/ScheduleDisplay';
 import TopBar from '../components/layout/TopBar';
 import FloatingActionButton from '../components/layout/FloatingActionButton';
+import { useScheduleApi } from '../hooks/useScheduleApi';
+import { getToken } from '../auth/token';
 
 const SchedulePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -11,6 +13,27 @@ const SchedulePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [initialPlaceName, setInitialPlaceName] = useState<string>('');
   const navigate = useNavigate();
+
+  // API 훅 사용
+  const {
+    schedules,
+    loading,
+    error,
+    loadSchedules,
+    clearError
+  } = useScheduleApi(selectedDate);
+
+  // 전체 저장 기능은 제거 (개별 저장으로 대체)
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+  }, [navigate]);
 
   // URL 파라미터에서 장소명과 날짜 가져오기
   useEffect(() => {
@@ -28,6 +51,11 @@ const SchedulePage: React.FC = () => {
       }
     }
   }, [searchParams]);
+
+  // 선택된 날짜가 변경될 때 스케줄 로드
+  useEffect(() => {
+    loadSchedules(selectedDate);
+  }, [selectedDate, loadSchedules]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,9 +80,27 @@ const SchedulePage: React.FC = () => {
           
           {/* 오른쪽 패널 - 스케줄 표시 */}
           <div className="flex-1">
+            {loading && (
+              <div className="flex justify-center items-center h-32">
+                <div className="text-gray-500">스케줄을 불러오는 중...</div>
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
+                <span>{error}</span>
+                <button
+                  onClick={clearError}
+                  className="text-red-500 hover:text-red-700 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <ScheduleDisplay 
               selectedDate={selectedDate} 
               initialPlaceName={initialPlaceName}
+              schedules={schedules}
+              onScheduleUpdate={loadSchedules}
             />
           </div>
                  </div>

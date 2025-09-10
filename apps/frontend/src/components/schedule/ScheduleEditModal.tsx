@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScheduleItem } from '../../hooks/useSchedule';
+import TimeInput from './TimeInput';
 
 interface ScheduleEditModalProps {
   isOpen: boolean;
@@ -15,11 +16,16 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
   onSave
 }) => {
   const [formData, setFormData] = useState<ScheduleItem>({
-    id: 0,
+    id: '',
+    userId: '',
+    date: '',
     startTime: '',
     endTime: '',
-    googleApiData: '',
-    remarks: ''
+    title: '',
+    remarks: '',
+    order: 0,
+    createdAt: '',
+    updatedAt: ''
   });
 
   useEffect(() => {
@@ -31,7 +37,26 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.startTime && formData.endTime) {
-      onSave(formData);
+      // 시작 시간과 종료 시간이 같으면 종료 시간을 1시간 후로 설정
+      let endTime = formData.endTime;
+      if (formData.startTime === formData.endTime) {
+        const [hours, minutes] = formData.startTime.split(':').map(Number);
+        const startMinutes = hours * 60 + minutes;
+        const endMinutes = startMinutes + 60; // 1시간 추가
+        const endHours = Math.floor(endMinutes / 60);
+        const endMins = endMinutes % 60;
+        endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        
+        // 사용자에게 알림
+        alert(`시작 시간과 종료 시간이 같아서 종료 시간을 ${endTime}으로 자동 설정했습니다.`);
+      }
+
+      const updatedData = {
+        ...formData,
+        endTime: endTime
+      };
+
+      onSave(updatedData);
       onClose();
     }
   };
@@ -54,11 +79,10 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               시작 시간
             </label>
-            <input
-              type="time"
+            <TimeInput
               value={formData.startTime}
-              onChange={(e) => handleChange('startTime', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(time) => handleChange('startTime', time)}
+              placeholder="시작 시간"
               required
             />
           </div>
@@ -67,25 +91,25 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               종료 시간
             </label>
-            <input
-              type="time"
+            <TimeInput
               value={formData.endTime}
-              onChange={(e) => handleChange('endTime', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(time) => handleChange('endTime', time)}
+              placeholder="종료 시간"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              구글 API 데이터
+              제목
             </label>
             <input
               type="text"
-              value={formData.googleApiData}
-              onChange={(e) => handleChange('googleApiData', e.target.value)}
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="장소명"
+              placeholder="스케줄 제목"
+              required
             />
           </div>
           
@@ -95,7 +119,7 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.remarks}
+              value={formData.remarks || ''}
               onChange={(e) => handleChange('remarks', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="활동 내용"

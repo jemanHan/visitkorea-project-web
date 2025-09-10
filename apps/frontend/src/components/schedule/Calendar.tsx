@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSchedule } from '../../hooks/useSchedule';
 
 interface CalendarProps {
   date: Date;
@@ -8,7 +7,6 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ date, selectedDate, onDateSelect }) => {
-  const { getSchedulesForDate } = useSchedule();
   const year = date.getFullYear();
   const month = date.getMonth();
 

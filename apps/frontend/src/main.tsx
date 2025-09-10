@@ -16,13 +16,8 @@ const router = createBrowserRouter([
   { path: '/places/:id', element: <DetailPage /> },
   { path: '/signup', element: <Signup /> },
   { path: '/login', element: <Login /> },
-      {
-      element: <ProtectedRoute />,
-      children: [
-        { path: '/mypage', element: <MyPage /> },
-        { path: '/schedule', element: <SchedulePage /> },
-      ]
-    }
+  { path: '/mypage', element: <MyPage /> },
+  { path: '/schedule', element: <SchedulePage /> }, // 임시로 보호 해제
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
