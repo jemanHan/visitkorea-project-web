@@ -71,3 +71,8 @@ export function photoUrl(placeId: string, photoName?: string, maxWidthPx = 600) 
   sp.set('maxWidthPx', String(maxWidthPx));
   return `${API_PREFIX}/v1/places/${encodeURIComponent(placeId)}/photos/media?${sp.toString()}`;
 }
+
+// 새로운 Google Places API v1을 사용한 이미지 URL 생성
+export function placePhotoUrl(placeId: string) {
+  return `${API_PREFIX}/v1/places/${encodeURIComponent(placeId)}/photo`;
+}

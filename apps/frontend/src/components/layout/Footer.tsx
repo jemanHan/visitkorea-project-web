@@ -20,7 +20,7 @@ export default function Footer() {
               <li>
                 <button
                   type="button"
-                  className="hover:underline text-gray-600 dark:text-gray-300"
+                  className="hover:underline text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
                   onClick={() => setOpenTerms(true)}
                 >
                   {t('footerTerms')}
@@ -29,7 +29,7 @@ export default function Footer() {
               <li>
                 <button
                   type="button"
-                  className="hover:underline text-gray-600 dark:text-gray-300"
+                  className="hover:underline text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
                   onClick={() => setOpenPrivacy(true)}
                 >
                   {t('footerPrivacy')}
@@ -62,7 +62,7 @@ export default function Footer() {
             <div className="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm leading-6 text-gray-700 dark:text-gray-300">
               <div className="space-y-4" dangerouslySetInnerHTML={{ __html: t('footerTermsContent') as string }} />
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button className="btn btn-sm btn-primary" onClick={() => setOpenTerms(false)}>{t('close')}</button>
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function Footer() {
             <div className="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm leading-6 text-gray-700 dark:text-gray-300">
               <div className="space-y-4" dangerouslySetInnerHTML={{ __html: t('footerPrivacyContent') as string }} />
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button className="btn btn-sm btn-primary" onClick={() => setOpenPrivacy(false)}>{t('close')}</button>
             </div>
           </div>

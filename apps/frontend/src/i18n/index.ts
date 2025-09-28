@@ -110,7 +110,6 @@ const ko = {
     jirisan: '한반도 최초의 국립공원, 천왕봉에서 바라보는 일출 유명',
     hallaMountainName: '한라산 국립공원',
     hallasan: '대한민국 최고봉(1950m), 백록담 분화구 호수 명소',
-    bukhanMountainName: '북한산국립공원',
     bukhansan: '서울 접근성 최고, 외국인 관광객 인기 1위 등산지',
     mudungMountainName: '무등산',
     mudungsan: '남도의 상징적 명산, 천연 암석기둥 \'입석대\'로 유명',
@@ -298,7 +297,6 @@ const ko = {
     description: '설명',
     googleReviews: 'Google 리뷰 분포',
     totalReviews: '전체 리뷰',
-    reviews: '리뷰',
     hideReviews: '리뷰 숨기기',
     relevanceOrder: '관련성순',
     latestOrder: '최신순',
@@ -316,12 +314,9 @@ const ko = {
     website: '웹사이트',
     copyAddress: '주소 복사',
     details: '상세정보',
-    address: '주소',
     phoneNumber: '전화번호',
-    quickActions: '빠른 액션',
     addToSchedule: '스케줄에 추가',
     viewOnGoogleMaps: 'Google Maps에서 보기',
-    travelTips: '여행 팁',
     tipCheckHours: '방문 전 전화로 영업시간 확인',
     tipTransport: '주차 시설 및 대중교통 정보 확인',
     tipWeather: '날씨에 따른 준비물 체크',
@@ -334,13 +329,13 @@ const ko = {
     noName: '이름 없음',
     editNickname: '닉네임 변경',
     passwordChange: '비밀번호 변경',
-    logout: '로그아웃',
     deleteAccount: '회원탈퇴',
     calendar: '달력',
+    darkModeOn: '다크모드 켜기',
+    darkModeOff: '다크모드 끄기',
     today: '오늘',
     selectedDate: '선택된 날짜',
     otherMonth: '다른 달',
-    login: '로그인',
     loggingIn: '로그인 중...',
     loginFailed: '로그인에 실패했습니다.',
     signup: '회원가입',
@@ -351,8 +346,6 @@ const ko = {
     noAccount: '계정이 없으신가요?',
     haveAccount: '이미 계정이 있으신가요?',
     optional: '선택',
-    cancel: '취소',
-    save: '저장',
     saving: '저장 중...',
     change: '변경',
     nickname: '닉네임',
@@ -365,11 +358,8 @@ const ko = {
     reenterNewPassword: '새 비밀번호를 다시 입력하세요',
     // 모달/공통 라벨
     detailInfo: '상세 정보',
-    phoneNumber: '전화번호',
     quickActions: '빠른 액션',
-    addToSchedule: '스케줄에 추가',
     travelTips: '여행 팁',
-    tipCheckHours: '방문 전 전화로 영업시간 확인',
     tipTransport: '주차 시설 및 대중교통 정보 확인',
     tipWeather: '날씨에 따른 준비물 체크',
     close: '닫기',
@@ -399,6 +389,10 @@ const ko = {
       '경남': '경남',
       '제주': '제주'
     },
+    
+    // 지역 선택
+    expandList: '목록 펼치기',
+    collapseList: '목록 접기',
     
   }
 };
@@ -656,6 +650,8 @@ const en = {
     logout: 'Logout',
     deleteAccount: 'Delete Account',
     calendar: 'Calendar',
+    darkModeOn: 'Dark Mode On',
+    darkModeOff: 'Dark Mode Off',
     today: 'Today',
     selectedDate: 'Selected Date',
     otherMonth: 'Other Month',
@@ -824,6 +820,10 @@ const en = {
       '경남': 'Gyeongnam',
       '제주': 'Jeju'
     },
+    
+    // 지역 선택
+    expandList: 'Expand List',
+    collapseList: 'Collapse List',
     
   }
 };

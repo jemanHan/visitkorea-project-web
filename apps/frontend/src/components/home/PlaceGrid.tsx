@@ -127,10 +127,10 @@ export default memo(function PlaceGrid({ items }: { items: Item[] }) {
                   {placeName}
                 </h3>
                 <div className="flex items-center">
-                  <p className="text-sm text-gray-600 dark:text-white flex items-center gap-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
                     <span className="text-yellow-500">⭐</span>
-                    <span className="font-medium">{p.rating ?? "-"}</span>
-                    <span className="text-gray-400">({p.userRatingCount ?? 0})</span>
+                    <span className="font-medium text-gray-800">{p.rating ?? "-"}</span>
+                    <span className="text-gray-400 dark:text-gray-500">({p.userRatingCount ?? 0})</span>
                   </p>
                 </div>
               </div>

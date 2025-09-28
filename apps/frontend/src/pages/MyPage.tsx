@@ -5,6 +5,7 @@ import { clearToken, isAuthenticated } from '../api/auth';
 import { getMe, updateProfile, changePassword, deleteAccount, Me } from '../api/users';
 import { getLikes, LikeData } from '../api/likes';
 import { getRecentViews, RecentViewData } from '../api/recentViews';
+import { photoUrl, placePhotoUrl } from '../lib/fetchers';
 import TopBar from '../components/layout/TopBar';
 import CalendarBoard from '../components/calendar/CalendarBoard';
 import FloatingActionButton from '../components/layout/FloatingActionButton';
@@ -173,33 +174,15 @@ export default function MyPage() {
     }
   }
 
-  // 이미지 캐시에서 이미지 URL 가져오기
-  const getCachedImageUrl = (placeId: string) => {
-    const cached = sessionStorage.getItem(`place-photo:${placeId}`);
-    if (cached) {
-      try {
-        const data = JSON.parse(cached);
-        // 캐시된 이미지가 24시간 이내인지 확인
-        const isRecent = Date.now() - data.timestamp < 24 * 60 * 60 * 1000;
-        if (isRecent) {
-          return data.url;
-        } else {
-          // 오래된 캐시 삭제
-          sessionStorage.removeItem(`place-photo:${placeId}`);
-        }
-      } catch (e) {
-        console.error('Failed to parse cached image data:', e);
-        sessionStorage.removeItem(`place-photo:${placeId}`);
-      }
-    }
-    return null;
-  };
 
   // 장소 카드 렌더링 함수
   const renderPlaceCard = (place: LikeData | RecentViewData, onRemove?: (id: string) => void) => {
     const cachedName = nameCache[place.placeId];
     const name = cachedName || place.name || t('noName') || '이름 없음';
-    const imageUrl = getCachedImageUrl(place.placeId);
+    
+    // 새로운 Google Places API v1을 사용한 이미지 로딩
+    const imageSrc = placePhotoUrl(place.placeId);
+    const noImageText = i18n.language.startsWith('en') ? 'No Image' : '이미지 없음';
     
     return (
       <div
@@ -213,27 +196,40 @@ export default function MyPage() {
         }}
       >
         <div className="relative w-full h-[14.784rem] rounded-xl overflow-hidden bg-gray-100">
-          {imageUrl ? (
-            <img 
-              src={imageUrl} 
-              alt={name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              onError={(e) => {
-                // 이미지 로드 실패 시 기본 아이콘 표시
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  const fallback = document.createElement('div');
-                  fallback.className = 'w-full h-full flex items-center justify-center text-5xl text-gray-300';
-                  fallback.textContent = '📍';
-                  parent.appendChild(fallback);
+          <img 
+            src={imageSrc} 
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              // 이미지 로드 실패 시 placeholder 표시
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const parent = target.parentElement;
+              if (parent) {
+                const fallback = document.createElement('div');
+                fallback.className = 'w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center';
+                fallback.innerHTML = `<span class="text-gray-500 text-sm">${noImageText}</span>`;
+                parent.appendChild(fallback);
+              }
+            }}
+            onLoad={(e) => {
+              // 이미지 로드 성공 시 로딩 상태 제거
+              const target = e.target as HTMLImageElement;
+              const parent = target.parentElement;
+              if (parent) {
+                const loadingDiv = parent.querySelector('.loading-placeholder');
+                if (loadingDiv) {
+                  loadingDiv.remove();
                 }
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-5xl text-gray-300">📍</div>
-          )}
+              }
+            }}
+          />
+          {/* 로딩 상태 표시 */}
+          <div className="loading-placeholder absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+          </div>
           {onRemove && (
             <button
               className="absolute top-3 right-3 bg-white/85 dark:bg-gray-800/85 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-red-600 rounded-full w-10 h-10 flex items-center justify-center shadow text-lg"

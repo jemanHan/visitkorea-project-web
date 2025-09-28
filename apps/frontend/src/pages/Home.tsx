@@ -6,9 +6,10 @@ import TopBar from "../components/layout/TopBar";
 import Footer from "../components/layout/Footer";
 import Hero from "../components/common/Hero";
 import PlaceCard from "../components/cards/PlaceCard";
-import RegionChips from "../components/home/RegionChips";
+import RegionChipsEnhanced from "../components/home/RegionChipsEnhanced";
 import PlaceGrid from "../components/home/PlaceGrid";
 import { searchPlaces, PlaceLite } from "../lib/fetchers";
+import { preloadStrategies, getCachedData } from "../lib/preloader";
 
 const MIN_RATING = Number(import.meta.env.VITE_MIN_RATING ?? 3.0);
 const MIN_REVIEWS = Number(import.meta.env.VITE_MIN_REVIEWS ?? 5);
@@ -28,13 +29,24 @@ export default function Home() {
   const debounceRef = useRef<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const loadRecommended = useCallback(async () => {
+  const loadRecommended = async () => {
+    // 캐시된 데이터 먼저 확인
+    const cacheKey = `home_${region}_${urlQuery}_${i18n.language}`;
+    const cachedData = getCachedData(cacheKey, 300000); // 5분 캐시
+    
+    if (cachedData) {
+      setItems((cachedData as any).data || []);
+      setPagination((cachedData as any).pagination || null);
+      setLoading(false);
+      return;
+    }
+
     // 이전 디바운스 타이머 클리어
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
-    // 250ms 디바운스
+    // 100ms 디바운스 (2.5배 단축)
     debounceRef.current = window.setTimeout(async () => {
       // 이전 요청 취소
       if (abortRef.current) {
@@ -61,6 +73,16 @@ export default function Home() {
         const result = await searchPlaces(baseParams);
         let list = ((result as any).data || []) as PlaceLite[];
         let pageInfo = (result as any).pagination;
+        
+        // 디버깅: 페이지 정보 확인
+        console.log(`[${region}] Loading page ${currentPage}:`, {
+          currentPage,
+          totalPages: pageInfo?.totalPages,
+          hasNext: pageInfo?.hasNext,
+          totalItems: pageInfo?.totalItems,
+          itemsInPage: list.length,
+          apiCalls: 1 // 현재 페이지 1회 호출
+        });
 
         // 언어 스크립트 기준 필터링 + 백필
         const hasKorean = (s: string) => /[\u3131-\u318F\uAC00-\uD7A3]/.test(s);
@@ -72,31 +94,86 @@ export default function Home() {
           return true;
         };
 
-        let filtered = list.filter(it => matches(getName(it)));
+        // Google API 정보가 있는지 확인하는 함수
+        const hasGoogleApiData = (item: PlaceLite) => {
+          // PlaceLite 타입에는 id 필드만 있음
+          const hasId = !!(item.id && item.id.trim() !== '');
+          
+          // 디버깅: 첫 번째 아이템의 구조 확인
+          if (list.length > 0 && list.indexOf(item) === 0) {
+            console.log('[DEBUG] First item structure:', {
+              id: item.id,
+              displayName: item.displayName,
+              keys: Object.keys(item)
+            });
+          }
+          
+          return hasId;
+        };
 
-        // 부족하면 다음 페이지에서 추가로 끌어오기 (최대 2페이지 추가)
+        let filtered = list.filter(it => {
+          const nameMatch = matches(getName(it));
+          // 영어 환경에서는 기본적으로 이름 매칭만 확인
+          // Google API 정보는 선택적 (모든 아이템이 id를 가지고 있어야 함)
+          if (lang === 'en') {
+            return nameMatch; // 일단 이름 매칭만 확인
+          }
+          return nameMatch;
+        });
+
+        // 디버깅: 필터링 결과 로그
+        console.log(`[${region}] Initial filtering: ${list.length} -> ${filtered.length} (lang: ${lang})`);
+        
+        // 영어 환경에서 상세 디버깅
+        if (lang === 'en') {
+          const withGoogleApi = list.filter(it => hasGoogleApiData(it)).length;
+          const koreanNames = list.filter(it => hasKorean(getName(it))).length;
+          const englishNames = list.filter(it => !hasKorean(getName(it))).length;
+          
+          console.log(`[${region}] Items with Google API: ${withGoogleApi}/${list.length}`);
+          console.log(`[${region}] Korean names: ${koreanNames}, English names: ${englishNames}`);
+          
+          // 첫 번째 아이템의 이름 확인
+          if (list.length > 0) {
+            console.log(`[${region}] First item name: "${getName(list[0])}" (hasKorean: ${hasKorean(getName(list[0]))})`);
+          }
+        }
+
+        // 부족하면 다음 페이지에서 추가로 끌어오기 (단순화)
         let nextPage = (pageInfo?.currentPage || currentPage) + 1;
-        const maxExtraPages = 2;
-        let extraTried = 0;
         const seen = new Set<string>(list.map(i => i.id));
         let totalConsumedPages = 1; // 현재 페이지 포함
 
-        while (filtered.length < 8 && pageInfo?.hasNext && extraTried < maxExtraPages) {
-          const extra = await searchPlaces({ ...baseParams, page: nextPage });
-          const extraList = ((extra as any).data || []) as PlaceLite[];
-          const extraPageInfo = (extra as any).pagination;
-          nextPage += 1;
-          extraTried += 1;
-          totalConsumedPages += 1;
-          
-          for (const it of extraList) {
-            if (!seen.has(it.id)) {
-              seen.add(it.id);
-              if (matches(getName(it))) filtered.push(it);
+        // 단순하게 1페이지만 추가로 가져오기
+        if (filtered.length < 8 && pageInfo?.hasNext) {
+          try {
+            const extra = await searchPlaces({ ...baseParams, page: nextPage });
+            const extraList = ((extra as any).data || []) as PlaceLite[];
+            const extraPageInfo = (extra as any).pagination;
+            
+            totalConsumedPages += 1;
+            
+            for (const it of extraList) {
+              if (!seen.has(it.id)) {
+                seen.add(it.id);
+                const nameMatch = matches(getName(it));
+                if (nameMatch) {
+                  filtered.push(it);
+                }
+              }
+              if (filtered.length >= 8) break;
             }
-            if (filtered.length >= 8) break;
+            
+            // 디버깅: 추가 페이지 결과
+            console.log(`[${region}] Extra page ${nextPage}: ${extraList.length} items -> ${filtered.length} total`);
+          } catch (error) {
+            console.warn(`Failed to fetch page ${nextPage}:`, error);
           }
         }
+
+        // 최종 결과 로그
+        const totalApiCalls = totalConsumedPages;
+        console.log(`[${region}] Final result: ${filtered.length} items from ${totalConsumedPages} pages (API calls: ${totalApiCalls})`);
 
         // 최종 세팅: 부족하면 원본 섞어서 최소 노출 보장
         if (filtered.length < 8) {
@@ -104,13 +181,14 @@ export default function Home() {
           filtered = [...filtered, ...filler];
         }
 
-        // 페이지네이션 정보 조정: 소비된 페이지 수만큼 조정
+        // 페이지네이션 정보: 원본 정보 그대로 유지 (단순화)
         const adjustedPageInfo = {
           ...pageInfo,
           currentPage: currentPage,
-          totalPages: Math.max(1, (pageInfo?.totalPages || 1) - (totalConsumedPages - 1)),
-          hasNext: (pageInfo?.totalPages || 1) > currentPage + (totalConsumedPages - 1),
-          totalItems: Math.max(filtered.length, pageInfo?.totalItems || 0)
+          // 원본 페이지 정보 그대로 사용
+          totalPages: pageInfo?.totalPages || 1,
+          hasNext: pageInfo?.hasNext || false,
+          totalItems: pageInfo?.totalItems || filtered.length
         };
 
         setItems(filtered);
@@ -124,7 +202,7 @@ export default function Home() {
         setLoading(false);
       }
     }, 250);
-  }, [region, urlQuery, currentPage, i18n.language]);
+  };
 
   useEffect(() => {
     void loadRecommended();
@@ -134,7 +212,7 @@ export default function Home() {
         try { abortRef.current.abort(); } catch {}
       }
     };
-  }, [loadRecommended]);
+  }, [region, urlQuery, currentPage, i18n.language]);
 
   // 필터 변경 시 페이지를 1로 리셋
   useEffect(() => {
@@ -142,8 +220,10 @@ export default function Home() {
   }, [region, urlQuery]);
 
   const handlePageChange = useCallback((page: number) => {
+    // 단순하게 페이지 번호만 설정
+    console.log(`[${region}] Page change requested: ${currentPage} -> ${page}`);
     setCurrentPage(page);
-  }, []);
+  }, [region, currentPage]);
 
   const handleRegionChange = useCallback((newRegion: string) => {
     setRegion(newRegion);
@@ -162,12 +242,11 @@ export default function Home() {
       {/* 메인 콘텐츠 */}
       <main className="section dark:bg-gray-900">
         <div className="container-xl">
-          <RegionChips current={region} onPick={handleRegionChange} />
+          <RegionChipsEnhanced current={region} onPick={handleRegionChange} />
           
           {/* 인기 여행지 섹션 */}
           <div className="mb-6">
-            <div className="proof-accent-bar"></div>
-            <h2 className="section-title mt-3">{t('popularDestinations')}</h2>
+            <h2 className="section-title">{t('popularDestinations')}</h2>
             <p className="section-sub">{t('nationwideDescription')}</p>
           </div>
         {loading
@@ -225,9 +304,6 @@ export default function Home() {
                     {t('next')}
                   </button>
                   
-                  <div className="text-sm text-gray-500 dark:text-white ml-4">
-                    {pagination.totalItems}{t('items')} {t('of')} {((currentPage - 1) * 8) + 1}-{Math.min(currentPage * 8, pagination.totalItems)}{t('items')}
-                  </div>
                 </div>
               )}
             </>

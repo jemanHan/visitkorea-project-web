@@ -672,7 +672,7 @@ export default function DetailPage() {
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 {typeof data.rating === 'number' && (
                   <>
-                    <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
+                    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
                       ★ {data.rating?.toFixed(1)}
                     </span>
                     {data.userRatingCount && (
@@ -734,7 +734,8 @@ export default function DetailPage() {
                     {data.openingHours.weekdayDescriptions.map((line: string, idx: number) => {
                       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                       const today = new Date().getDay();
-                      const isToday = line.includes(dayNames[today]);
+                      // 더 정확한 매칭: 해당 요일로 시작하는지 확인
+                      const isToday = line.startsWith(dayNames[today] + '요일') || line.startsWith(dayNames[today] + '일');
                   return (
                     <div key={idx} className={`${isToday ? 'text-blue-600 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}>
                       {line}
@@ -789,7 +790,7 @@ export default function DetailPage() {
                   />
                 ))}
               </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 {data.rating?.toFixed(1) ?? '-'} ({data.userRatingCount?.toLocaleString() ?? 0} {t('reviews')})
               </span>
             </div>
@@ -845,7 +846,8 @@ export default function DetailPage() {
                 {data.openingHours.weekdayDescriptions.map((line: string, idx: number) => {
                   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                   const today = new Date().getDay();
-                  const isToday = line.includes(dayNames[today]);
+                  // 더 정확한 매칭: 해당 요일로 시작하는지 확인
+                  const isToday = line.startsWith(dayNames[today] + '요일') || line.startsWith(dayNames[today] + '일');
                   return (
                     <div key={idx} className={`${isToday ? 'text-blue-600 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}>
                       {line}
@@ -889,7 +891,7 @@ export default function DetailPage() {
                <div className="flex items-center justify-center">
                  {/* Overall Rating */}
                  <div className="text-center">
-                   <div className="mb-1 text-3xl font-bold text-gray-800 dark:text-gray-200">
+                   <div className="mb-1 text-3xl font-bold text-gray-800 dark:text-gray-100">
                      {data.rating?.toFixed(1) || '0.0'}
                    </div>
                    <div className="flex justify-center mb-2">

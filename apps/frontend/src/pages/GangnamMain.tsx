@@ -410,7 +410,7 @@ export default function GangnamMain() {
       title: t('kpopMvLocations'),
       description: t('kpopMvLocationsDescription'),
       spots: [
-           { id: 'ChIJufY8c6pDDDURw6IIswavqFk', name: t('jejuSagyeBeach'), description: t('jejuSagyeBeachDesc'), address: '대한민국 제주특별자치도 서귀포시 안덕면 사계리 131-8', lat: 33.2400, lng: 126.4000, category: 'music', featured: 'BTS For You', image: '/places/BTS.png', estimatedTime: 120, tips: ['일몰 시간대 방문 추천', 'BTS 팬들의 성지 순례', '한라산과 바다의 조화 감상'] },
+           { id: 'ChIJufY8c6pDDDURw6IIswavqFk', name: t('jejuSagyeBeach'), description: t('jejuSagyeBeachDesc'), address: '대한민국 제주특별자치도 서귀포시 안덕면 사계리 131-8', lat: 33.2400, lng: 126.4000, category: 'music', featured: 'BTS For You', image: '/places/경포대해변.png', estimatedTime: 120, tips: ['일몰 시간대 방문 추천', 'BTS 팬들의 성지 순례', '한라산과 바다의 조화 감상'] },
         { id: 'ChIJGVQOXbd3ezURbRuEUgEqcAY', name: t('incheonSongdoTribowl'), description: t('incheonSongdoTribowlDesc'), address: '대한민국 인천광역시 연수구 송도동 24-6', lat: 37.3900, lng: 126.6500, category: 'music', featured: 'EXO Miracles in December', image: '/places/트라이보울.png', estimatedTime: 90, tips: ['야간 조명이 아름다움', '미래형 건축물 감상', '송도 센트럴파크와 함께 방문'] },
         { id: 'ChIJT8H4r9qifDURmuXJ_6m6vM0', name: t('seoulBukchonHanok'), description: t('seoulBukchonHanokDesc'), address: '대한민국 서울특별시 종로구 계동길', lat: 37.5800, lng: 126.9800, category: 'music', featured: 'IU Through the Night', image: '/places/한옥마을.png', estimatedTime: 120, tips: ['한복 체험 가능', '전통 한옥 건축 감상', '조용한 시간대 방문 추천'] },
         { id: 'ChIJA8nY8ExPZjURPC-8kcf4l4E', name: t('gyeongjuHwanglidan'), description: t('gyeongjuHwanglidanDesc'), address: '대한민국 경상북도 경주시 황남동 포석로 일대', lat: 35.8500, lng: 129.2000, category: 'music', featured: 'SEVENTEEN Darl+ing', image: '/places/황리단길.png', estimatedTime: 150, tips: ['카페 투어 추천', '셀프 포토존 활용', '전통과 현대의 조화 체험'] },
@@ -529,7 +529,7 @@ export default function GangnamMain() {
       <div className="relative min-h-[60vh] md:min-h-[80vh] overflow-hidden">
         {/** 현재 배너 이미지가 '여행사진.jpg'일 때 텍스트를 검정으로 처리 */}
         {/** NOTE: heroImages는 파일 상단에 정의된 동일 배열을 사용 */}
-        {/** '/hero/여행사진.jpg' 경로 매칭 */}
+        {/** '/static/hero/여행사진.jpg' 경로 매칭 */}
         {/** 렌더 구간에서 사용할 플래그 */}
         {/* eslint-disable-next-line */}
         {/* no-op placeholder removed */}

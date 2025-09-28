@@ -239,7 +239,7 @@ const NearbyRecommendationsPage: React.FC = () => {
                           {place.rating && (
                             <>
                               <span className="text-yellow-500">⭐</span>
-                              <span className="font-medium">{place.rating.toFixed(1)}</span>
+                              <span className="font-medium text-gray-700 dark:text-gray-200">{place.rating.toFixed(1)}</span>
                               {place.userRatingCount && (
                                 <span className="text-gray-500">({place.userRatingCount})</span>
                               )}

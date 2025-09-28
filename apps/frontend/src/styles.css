@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 스크롤바 숨기기 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 @layer base {
   html, body {
     @apply bg-[#fafaf9] text-[#111827] antialiased;
@@ -138,17 +148,14 @@
   }
   
   .section-title {
-    @apply text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100;
+    @apply text-2xl md:text-3xl font-extrabold tracking-tight;
   }
   
   .section-sub {
-    @apply text-gray-600 dark:text-gray-300 mt-2;
+    @apply text-gray-600 mt-2;
   }
   
   /* PROOF elements that must be visible after build */
-  .proof-accent-bar {
-    @apply h-1 w-16 rounded-full bg-brand;
-  }
   
   .proof-section-tint {
     @apply bg-[#f9fafb];

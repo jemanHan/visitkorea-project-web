@@ -17,21 +17,21 @@ const requestQueue = new Map<string, Promise<any>>();
 
 // 설정
 const CONFIG = {
-  // Rate Limiting
-  MIN_REQUEST_INTERVAL: 1000, // 최소 1초 간격
-  MAX_REQUESTS_PER_MINUTE: 50, // 분당 최대 50개 요청 (대폭 증가)
-  MAX_CONCURRENT_REQUESTS: 5, // 동시 최대 5개 요청 (증가)
+  // Rate Limiting (최적화)
+  MIN_REQUEST_INTERVAL: 200, // 최소 200ms 간격 (5배 단축)
+  MAX_REQUESTS_PER_MINUTE: 100, // 분당 최대 100개 요청 (2배 증가)
+  MAX_CONCURRENT_REQUESTS: 10, // 동시 최대 10개 요청 (2배 증가)
   
-  // Caching
-  CACHE_DURATION: 1800000, // 30분 (30 * 60 * 1000)
-  MAX_CACHE_SIZE: 100, // 최대 100개 캐시
+  // Caching (강화)
+  CACHE_DURATION: 3600000, // 1시간 (2배 증가)
+  MAX_CACHE_SIZE: 200, // 최대 200개 캐시 (2배 증가)
   
-  // Retry
-  MAX_RETRIES: 3,
-  RETRY_DELAY: 1000, // 1초
+  // Retry (최적화)
+  MAX_RETRIES: 2, // 재시도 2회로 단축
+  RETRY_DELAY: 500, // 500ms로 단축
   
-  // Timeout
-  REQUEST_TIMEOUT: 10000, // 10초
+  // Timeout (단축)
+  REQUEST_TIMEOUT: 5000, // 5초로 단축
 } as const;
 
 // 캐시 관리

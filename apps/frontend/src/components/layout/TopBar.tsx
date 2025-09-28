@@ -102,10 +102,10 @@ export default function TopBar() {
         {/* Search and Profile - Fixed Right Position */}
         <div className="absolute right-4 sm:right-6 md:right-8 lg:right-12 xl:right-16 top-1/2 transform -translate-y-1/2 z-20">
           <div className="flex items-center gap-3 md:gap-5">
-            {/* Dark Mode Toggle */}
+            {/* Dark Mode Toggle - hidden on mobile, visible on desktop */}
             <button
               aria-label="toggle dark mode"
-              className={`w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center transition-all ${isOpen || isScrolled || shouldShowDarkText ? 'bg-gray-100 text-gray-900 hover:bg-gray-200' : 'bg-white/20 hover:bg-white/30 text-white'}`}
+              className={`hidden md:flex w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full items-center justify-center transition-all ${isOpen || isScrolled || shouldShowDarkText ? 'bg-gray-100 text-gray-900 hover:bg-gray-200' : 'bg-white/20 hover:bg-white/30 text-white'}`}
               onClick={toggleDarkMode}
             >
               {isDark ? (
@@ -132,21 +132,13 @@ export default function TopBar() {
             <div className="relative order-3">
               <button
                 aria-label="change language"
-                className={`w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center transition-all ${isOpen || isScrolled || shouldShowDarkText ? 'bg-gray-100 text-gray-900' : 'bg-white/20 hover:bg-white/30 text-white'}`}
+                className={`w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 backdrop-blur-sm rounded-full flex items-center justify-center font-bold text-lg transition-all duration-250 ease-out ${isOpen || isScrolled || shouldShowDarkText ? 'bg-gray-100 text-gray-900' : 'bg-white/20 hover:bg-white/30 text-white'}`}
                 onClick={() => {
                   const dd = document.getElementById('global-lang-dd');
                   dd?.classList.toggle('hidden');
                 }}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-5 h-5 md:w-6 md:h-6"
-                  aria-hidden="true"
-                >
-                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm7.938 9h-3.09a15.91 15.91 0 00-1.1-5.006A8.006 8.006 0 0119.938 11zM12 4c1.264 0 2.96 2.227 3.664 6H8.336C9.04 6.227 10.736 4 12 4zM7.252 6.994A15.91 15.91 0 006.152 11H3.062a8.006 8.006 0 014.19-4.006zM3.062 13H6.15c.25 1.749.734 3.49 1.102 5.006A8.006 8.006 0 013.062 13zM12 20c-1.264 0-2.96-2.227-3.664-6h7.328C14.96 17.773 13.264 20 12 20zm4.748-1.006A15.91 15.91 0 0017.848 13h3.09a8.006 8.006 0 01-4.19 5.994z"/>
-                </svg>
+                {localStorage.getItem('i18nextLng')?.startsWith('ko') ? 'KR' : 'EN'}
               </button>
               <div id="global-lang-dd" className="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                 <button

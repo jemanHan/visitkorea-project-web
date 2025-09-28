@@ -436,13 +436,11 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({ selectedDate, initial
           </div>
         </div>
       </div>
-      {/* 다운로드/공유 바 - 가로로 펼치기 */}
+      {/* 다운로드 바 - 가로로 펼치기 */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
         <div className="flex flex-wrap gap-2 justify-center">
-          <button onClick={handleDownloadCSV} className="btn btn-sm btn-outline">📊 {t('excelDownload')}</button>
-          <button onClick={() => renderImage('png')} className="btn btn-sm btn-outline">🖼️ {t('pngDownload')}</button>
-          <button onClick={() => renderImage('jpg')} className="btn btn-sm btn-outline">📷 {t('jpgDownload')}</button>
-          <button onClick={handleShare} className="btn btn-sm btn-outline">🔗 {t('share')}</button>
+            <button onClick={handleDownloadCSV} className="btn btn-sm border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{t('excelDownload')}</button>
+            <button onClick={() => renderImage('jpg')} className="btn btn-sm border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{t('jpgDownload')}</button>
         </div>
       </div>
       
