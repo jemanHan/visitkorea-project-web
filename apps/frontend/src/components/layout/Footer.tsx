@@ -1,33 +1,94 @@
+import { useTranslation } from "react-i18next";
+import React, { useState } from "react";
+
 export default function Footer() {
+  const { t } = useTranslation();
+  const [openTerms, setOpenTerms] = useState(false);
+  const [openPrivacy, setOpenPrivacy] = useState(false);
+  
   return (
-    <footer className="mt-16 border-t">
-      <div className="container mx-auto px-4 py-10 grid gap-6 md:grid-cols-4">
-        <div>
-          <div className="text-lg font-bold mb-2">VisitKorea</div>
-          <p className="text-sm opacity-70">국내 여행 아이디어를 한 곳에서. 실습용 데모 UI.</p>
-        </div>
-        <div>
-          <div className="font-semibold mb-2">바로가기</div>
-          <ul className="space-y-1 text-sm">
-            <li><a href="#recommended" className="hover:underline">추천</a></li>
-            <li><a href="#regions" className="hover:underline">지역</a></li>
-            <li><a href="#themes" className="hover:underline">카테고리</a></li>
-          </ul>
-        </div>
-        <div>
-          <div className="font-semibold mb-2">안내</div>
-          <ul className="space-y-1 text-sm">
-            <li><a className="hover:underline" href="#">이용약관</a></li>
-            <li><a className="hover:underline" href="#">개인정보처리방침</a></li>
-          </ul>
-        </div>
-        <div>
-          <div className="font-semibold mb-2">고객센터</div>
-          <p className="text-sm opacity-70">평일 09:00 ~ 18:00</p>
-          <p className="text-sm opacity-70">support@example.com</p>
+    <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="container-xl py-10 md:py-14">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div>
+            <div className="text-lg font-bold mb-2 text-gray-900 dark:text-gray-100">Hello Korea</div>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{t('footerDescription')}</p>
+          </div>
+          <div>
+            <div className="font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('footerGuide')}</div>
+            <ul className="space-y-1 text-sm">
+              <li>
+                <button
+                  type="button"
+                  className="hover:underline text-gray-600 dark:text-gray-300"
+                  onClick={() => setOpenTerms(true)}
+                >
+                  {t('footerTerms')}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="hover:underline text-gray-600 dark:text-gray-300"
+                  onClick={() => setOpenPrivacy(true)}
+                >
+                  {t('footerPrivacy')}
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <div className="font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('footerCustomer')}</div>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{t('footerHours')}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{t('footerEmail')}</p>
+          </div>
         </div>
       </div>
-      <div className="text-xs opacity-60 text-center pb-6">© {new Date().getFullYear()} VisitKorea</div>
+      <div className="border-t border-gray-200 dark:border-gray-700">
+        <div className="container-xl py-4">
+          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">© {new Date().getFullYear()} HelloKorea</div>
+        </div>
+      </div>
+      {/* 이용약관 모달 */}
+      {openTerms && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="terms-title">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-3xl rounded-xl shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 id="terms-title" className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('footerTermsTitle')}</h3>
+              <button aria-label="close" className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setOpenTerms(false)}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm leading-6 text-gray-700 dark:text-gray-300">
+              <div className="space-y-4" dangerouslySetInnerHTML={{ __html: t('footerTermsContent') as string }} />
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button className="btn btn-sm btn-primary" onClick={() => setOpenTerms(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 개인정보처리방침 모달 */}
+      {openPrivacy && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-3xl rounded-xl shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 id="privacy-title" className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('footerPrivacyTitle')}</h3>
+              <button aria-label="close" className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setOpenPrivacy(false)}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm leading-6 text-gray-700 dark:text-gray-300">
+              <div className="space-y-4" dangerouslySetInnerHTML={{ __html: t('footerPrivacyContent') as string }} />
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button className="btn btn-sm btn-primary" onClick={() => setOpenPrivacy(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </footer>
   );
 }

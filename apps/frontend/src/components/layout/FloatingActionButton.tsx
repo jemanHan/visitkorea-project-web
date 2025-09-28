@@ -5,8 +5,8 @@ const FloatingActionButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // 홈 화면인지 확인
-  const isHomePage = location.pathname === '/';
+  // 홈 화면 포함 전체 페이지에서 표시하도록 변경
+  const isHomePage = false;
 
   const handleBackClick = () => {
     try {
@@ -25,24 +25,24 @@ const FloatingActionButton: React.FC = () => {
       {/* 홈 화면이 아닐 때만 뒤로 가기 버튼 표시 */}
       {!isHomePage && (
         <div 
-          className="fixed top-4 right-4 z-50"
+          className="fixed bottom-6 right-6 z-50"
           style={{ zIndex: 9999 }}
         >
           <button
             type="button"
             onClick={handleBackClick}
-            className="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
+            className="w-12 h-12 bg-white hover:bg-gray-50 text-gray-900 rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
             title="뒤로 가기"
             style={{ 
               position: 'fixed',
-              top: '16px',
-              right: '16px',
+              bottom: '24px',
+              right: '24px',
               zIndex: 9999,
               border: 'none',
               outline: 'none'
             }}
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
             </svg>
           </button>

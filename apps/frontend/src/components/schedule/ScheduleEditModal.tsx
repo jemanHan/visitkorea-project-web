@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ScheduleItem } from '../../hooks/useSchedule';
-import TimeInput from './TimeInput';
+import { useTranslation } from 'react-i18next';
+import { ScheduleItem } from '../../hooks/useScheduleApi';
 
 interface ScheduleEditModalProps {
   isOpen: boolean;
@@ -15,133 +15,201 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
   schedule,
   onSave
 }) => {
-  const [formData, setFormData] = useState<ScheduleItem>({
-    id: '',
-    userId: '',
-    date: '',
-    startTime: '',
-    endTime: '',
-    title: '',
-    remarks: '',
-    order: 0,
-    createdAt: '',
-    updatedAt: ''
-  });
+  const { t } = useTranslation();
+  const [editedSchedule, setEditedSchedule] = useState<ScheduleItem | null>(null);
 
   useEffect(() => {
     if (schedule) {
-      setFormData(schedule);
+      setEditedSchedule({ 
+        ...schedule,
+        googleApiData: schedule.googleApiData || schedule.title || '',
+        remarks: schedule.remarks || ''
+      });
     }
   }, [schedule]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.startTime && formData.endTime) {
-      // 시작 시간과 종료 시간이 같으면 종료 시간을 1시간 후로 설정
-      let endTime = formData.endTime;
-      if (formData.startTime === formData.endTime) {
-        const [hours, minutes] = formData.startTime.split(':').map(Number);
-        const startMinutes = hours * 60 + minutes;
-        const endMinutes = startMinutes + 60; // 1시간 추가
-        const endHours = Math.floor(endMinutes / 60);
-        const endMins = endMinutes % 60;
-        endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
-        
-        // 사용자에게 알림
-        alert(`시작 시간과 종료 시간이 같아서 종료 시간을 ${endTime}으로 자동 설정했습니다.`);
-      }
+  // 시간 유효성 검사 함수
+  const isValidTime = (time: string): boolean => {
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(time);
+  };
 
-      const updatedData = {
-        ...formData,
-        endTime: endTime
-      };
+  // 시간 범위 검사 함수
+  const isValidTimeRange = (startTime: string, endTime: string): boolean => {
+    if (!isValidTime(startTime) || !isValidTime(endTime)) return false;
+    
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    return startMinutes < endMinutes;
+  };
 
-      onSave(updatedData);
-      onClose();
+  const handleSave = () => {
+    if (!editedSchedule) return;
+
+    // 시간 유효성 검사
+    if (!isValidTime(editedSchedule.startTime)) {
+      alert(t('invalidTimeFormat'));
+      return;
     }
+    
+    if (!isValidTime(editedSchedule.endTime)) {
+      alert(t('invalidTimeFormat'));
+      return;
+    }
+    
+    if (!isValidTimeRange(editedSchedule.startTime, editedSchedule.endTime)) {
+      alert(t('endTimeAfterStart'));
+      return;
+    }
+
+    onSave(editedSchedule);
   };
 
-  const handleChange = (field: keyof ScheduleItem, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleCancel = () => {
+    onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !editedSchedule) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-bold mb-4 text-gray-800">
-          스케줄 편집
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-100">
+          📝 {t('editSchedule')}
         </h3>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              시작 시간
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('startTime')}
             </label>
-            <TimeInput
-              value={formData.startTime}
-              onChange={(time) => handleChange('startTime', time)}
-              placeholder="시작 시간"
-              required
-            />
+            <div className="flex border border-gray-300 dark:border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-blue-500">
+              <select
+                value={editedSchedule.startTime ? editedSchedule.startTime.split(':')[0] : '00'}
+                onChange={(e) => {
+                  const hour = e.target.value;
+                  const minute = editedSchedule.startTime ? editedSchedule.startTime.split(':')[1] || '00' : '00';
+                  setEditedSchedule({...editedSchedule, startTime: `${hour}:${minute}`});
+                }}
+                className="px-2 py-2 border-0 focus:outline-none bg-transparent"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i.toString().padStart(2, '0')}>
+                    {i.toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+              <span className="px-1 py-2 text-gray-500">:</span>
+              <select
+                value={editedSchedule.startTime ? editedSchedule.startTime.split(':')[1] : '00'}
+                onChange={(e) => {
+                  const minute = e.target.value;
+                  const hour = editedSchedule.startTime ? editedSchedule.startTime.split(':')[0] || '00' : '00';
+                  setEditedSchedule({...editedSchedule, startTime: `${hour}:${minute}`});
+                }}
+                className="px-2 py-2 border-0 focus:outline-none bg-transparent"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const minute = i * 5;
+                  return (
+                    <option key={minute} value={minute.toString().padStart(2, '0')}>
+                      {minute.toString().padStart(2, '0')}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              종료 시간
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('endTime')}
             </label>
-            <TimeInput
-              value={formData.endTime}
-              onChange={(time) => handleChange('endTime', time)}
-              placeholder="종료 시간"
-              required
-            />
+            <div className="flex border border-gray-300 dark:border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-blue-500">
+              <select
+                value={editedSchedule.endTime ? editedSchedule.endTime.split(':')[0] : '00'}
+                onChange={(e) => {
+                  const hour = e.target.value;
+                  const minute = editedSchedule.endTime ? editedSchedule.endTime.split(':')[1] || '00' : '00';
+                  setEditedSchedule({...editedSchedule, endTime: `${hour}:${minute}`});
+                }}
+                className="px-2 py-2 border-0 focus:outline-none bg-transparent"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i.toString().padStart(2, '0')}>
+                    {i.toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+              <span className="px-1 py-2 text-gray-500">:</span>
+              <select
+                value={editedSchedule.endTime ? editedSchedule.endTime.split(':')[1] : '00'}
+                onChange={(e) => {
+                  const minute = e.target.value;
+                  const hour = editedSchedule.endTime ? editedSchedule.endTime.split(':')[0] || '00' : '00';
+                  setEditedSchedule({...editedSchedule, endTime: `${hour}:${minute}`});
+                }}
+                className="px-2 py-2 border-0 focus:outline-none bg-transparent"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const minute = i * 5;
+                  return (
+                    <option key={minute} value={minute.toString().padStart(2, '0')}>
+                      {minute.toString().padStart(2, '0')}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              제목
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('placeActivity')}
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="스케줄 제목"
-              required
+              value={editedSchedule.googleApiData}
+              onChange={(e) => setEditedSchedule({...editedSchedule, googleApiData: e.target.value, title: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder={t('placePlaceholder')}
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              비고
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('memo')}
             </label>
             <input
               type="text"
-              value={formData.remarks || ''}
-              onChange={(e) => handleChange('remarks', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="활동 내용"
+              value={editedSchedule.remarks}
+              onChange={(e) => setEditedSchedule({...editedSchedule, remarks: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder={t('memoPlaceholder')}
             />
           </div>
-          
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              저장
-            </button>
-          </div>
-        </form>
+        </div>
+
+        <div className="flex gap-3 justify-end mt-6">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+          >
+            {t('cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium transition-colors"
+          >
+            {t('save')}
+          </button>
+        </div>
       </div>
     </div>
   );

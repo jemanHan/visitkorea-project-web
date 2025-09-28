@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { searchPlaces, photoUrl } from "../../lib/fetchers";
 
 type Slide = { key: string; title: string; sub: string; bg?: string };
 
-const THEMES = [
-  { key: "자연",  title: "자연으로의 초대", sub: "산·바다·섬을 한 번에" },
-  { key: "도심",  title: "도심 속 힐링 스팟", sub: "가까운 곳부터 가볍게" },
-  { key: "역사",  title: "시간여행",       sub: "역사 속으로" },
-  { key: "축제",  title: "축제의 계절",     sub: "지금 즐기기 좋은" },
-];
+// 테마 데이터는 컴포넌트 내부에서 다국어로 생성
 
 // 기본 배경 이미지 URL들 (API 호출 실패 시 사용)
 const FALLBACK_IMAGES = [
@@ -19,6 +15,16 @@ const FALLBACK_IMAGES = [
 ];
 
 export default function Hero() {
+  const { t, i18n } = useTranslation();
+  
+  // 다국어 테마 데이터 생성
+  const THEMES = [
+    { key: "자연",  title: t('natureTitle'), sub: t('natureSub') },
+    { key: "도심",  title: t('cityTitle'), sub: t('citySub') },
+    { key: "역사",  title: t('historyTitle'), sub: t('historySub') },
+    { key: "축제",  title: t('festivalTitle'), sub: t('festivalSub') },
+  ];
+  
   const [slides, setSlides] = useState<Slide[]>(THEMES.map((theme, idx) => ({
     ...theme,
     bg: FALLBACK_IMAGES[idx] // 초기 상태에서도 fallback 이미지 설정
@@ -27,6 +33,23 @@ export default function Hero() {
   const timer = useRef<number | null>(null);
   const hasLoaded = useRef<boolean>(false);
   const isMounted = useRef<boolean>(true);
+
+  // 언어 변경 시 slides 업데이트
+  useEffect(() => {
+    const newThemes = [
+      { key: "자연",  title: t('natureTitle'), sub: t('natureSub') },
+      { key: "도심",  title: t('cityTitle'), sub: t('citySub') },
+      { key: "역사",  title: t('historyTitle'), sub: t('historySub') },
+      { key: "축제",  title: t('festivalTitle'), sub: t('festivalSub') },
+    ];
+    
+    setSlides(prevSlides => {
+      return newThemes.map((theme, idx) => ({
+        ...theme,
+        bg: prevSlides[idx]?.bg || FALLBACK_IMAGES[idx]
+      }));
+    });
+  }, [i18n.language, t]);
 
   useEffect(() => {
     // 이미 로드된 경우 중복 실행 방지
@@ -43,7 +66,7 @@ export default function Hero() {
         try {
           // API 호출 제한: 한 번에 하나씩만 호출
           const list = await searchPlaces({ 
-            theme: t.key, 
+            q: t.key, 
             onlyTourism: true, 
             sort: "score", 
             limit: 1 
@@ -117,25 +140,65 @@ export default function Hero() {
       };
 
   return (
-    <div className="w-full mb-8">
-      <div className="relative w-[100vw] left-[50%] right-[50%] ml-[-50vw] mr-[-50vw] h-[42vh] md:h-[56vh]" style={style}>
-        {/* arrows */}
-        <button aria-label="prev" onClick={() => go(-1)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm md:btn-md opacity-80">‹</button>
-        <button aria-label="next" onClick={() => go(1)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm md:btn-md opacity-80">›</button>
+    <div className="w-full">
+      {/* 대형 배너 이미지 - 네비게이션과 겹치도록 */}
+      <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden" style={style}>
+        {/* 그라데이션 오버레이 */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
+        
+        {/* 네비게이션 화살표 */}
+        <button 
+          aria-label="prev" 
+          onClick={() => go(-1)}
+          className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-200"
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <button 
+          aria-label="next" 
+          onClick={() => go(1)}
+          className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-200"
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
 
-        {/* text overlay */}
-        <div className="absolute bottom-6 left-6 text-white drop-shadow-lg">
-          <h2 className="text-2xl md:text-4xl font-bold">{s?.title}</h2>
-          <p className="text-sm md:text-base opacity-90">{s?.sub}</p>
+        {/* 중앙 텍스트 콘텐츠 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white px-6 max-w-4xl">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 drop-shadow-2xl">
+              {s?.title}
+            </h1>
+            <p className="text-lg md:text-xl lg:text-2xl opacity-90 drop-shadow-lg max-w-2xl mx-auto">
+              {s?.sub}
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+              <button className="px-8 py-4 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold rounded-full transition-all duration-200 border border-white/30">
+                여행 계획하기
+              </button>
+              <button className="px-8 py-4 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-full transition-all duration-200 shadow-lg">
+                지금 시작하기
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* dots */}
-        <div className="absolute right-4 bottom-4 flex gap-2">
+        {/* 하단 인디케이터 */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3">
           {slides.map((_, idx) => (
-            <button key={idx} aria-label={`slide ${idx+1}`} onClick={() => jump(idx)}
-              className={`w-2.5 h-2.5 rounded-full ${idx===i ? "bg-white" : "bg-white/50"}`} />
+            <button 
+              key={idx} 
+              aria-label={`slide ${idx+1}`} 
+              onClick={() => jump(idx)}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                idx === i 
+                  ? "bg-white scale-110" 
+                  : "bg-white/50 hover:bg-white/70"
+              }`} 
+            />
           ))}
         </div>
       </div>

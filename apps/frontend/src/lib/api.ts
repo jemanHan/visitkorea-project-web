@@ -1,12 +1,12 @@
 // API 클라이언트 설정
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://13.209.108.148:3002';
+import { API_CONFIG, getApiUrl } from '../config/api.js';
 
 // API 요청 헬퍼 함수
 class ApiClient {
   private baseURL: string;
   private token: string | null = null;
 
-  constructor(baseURL: string) {
+  constructor(baseURL: string = API_CONFIG.BASE_URL) {
     this.baseURL = baseURL;
     // 로컬 스토리지에서 토큰 가져오기 (vk_token 키 사용)
     this.token = localStorage.getItem('vk_token');
@@ -49,10 +49,31 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      // 401 Unauthorized - 토큰 만료 또는 인증 실패
+      if (response.status === 401) {
+        console.warn('JWT 토큰이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.');
+        localStorage.removeItem('vk_token');
+        window.location.href = '/login';
+        throw new Error('Authentication expired');
+      }
+      
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    // 응답이 HTML인지 JSON인지 확인
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      console.error('서버에서 HTML을 반환했습니다. API 엔드포인트를 확인하세요.');
+      throw new Error('Server returned HTML instead of JSON');
+    }
+
+    try {
+      return await response.json();
+    } catch (error) {
+      console.error('JSON 파싱 실패:', error);
+      console.error('응답 내용:', await response.text());
+      throw new Error('Failed to parse JSON response');
+    }
   }
 
   // POST 요청
@@ -98,10 +119,31 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      // 401 Unauthorized - 토큰 만료 또는 인증 실패
+      if (response.status === 401) {
+        console.warn('JWT 토큰이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.');
+        localStorage.removeItem('vk_token');
+        window.location.href = '/login';
+        throw new Error('Authentication expired');
+      }
+      
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    // 응답이 HTML인지 JSON인지 확인
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      console.error('서버에서 HTML을 반환했습니다. API 엔드포인트를 확인하세요.');
+      throw new Error('Server returned HTML instead of JSON');
+    }
+
+    try {
+      return await response.json();
+    } catch (error) {
+      console.error('JSON 파싱 실패:', error);
+      console.error('응답 내용:', await response.text());
+      throw new Error('Failed to parse JSON response');
+    }
   }
 
   // DELETE 요청
@@ -112,15 +154,36 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      // 401 Unauthorized - 토큰 만료 또는 인증 실패
+      if (response.status === 401) {
+        console.warn('JWT 토큰이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.');
+        localStorage.removeItem('vk_token');
+        window.location.href = '/login';
+        throw new Error('Authentication expired');
+      }
+      
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    // 응답이 HTML인지 JSON인지 확인
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      console.error('서버에서 HTML을 반환했습니다. API 엔드포인트를 확인하세요.');
+      throw new Error('Server returned HTML instead of JSON');
+    }
+
+    try {
+      return await response.json();
+    } catch (error) {
+      console.error('JSON 파싱 실패:', error);
+      console.error('응답 내용:', await response.text());
+      throw new Error('Failed to parse JSON response');
+    }
   }
 }
 
 // API 클라이언트 인스턴스 생성
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient();
 
 // 스케줄 관련 API 함수들
 export const scheduleApi = {
@@ -160,12 +223,12 @@ export const scheduleApi = {
 export const authApi = {
   // 로그인
   login: (credentials: { email: string; password: string }) => {
-    return apiClient.post('/api/auth/login', credentials);
+    return apiClient.post('/v1/auth/login', credentials);
   },
 
   // 회원가입
   register: (userData: { email: string; password: string; name: string }) => {
-    return apiClient.post('/api/auth/register', userData);
+    return apiClient.post('/v1/auth/register', userData);
   },
 
   // 로그아웃
@@ -175,7 +238,7 @@ export const authApi = {
 
   // 토큰 검증
   verifyToken: () => {
-    return apiClient.get('/api/auth/verify');
+    return apiClient.get('/v1/auth/verify');
   },
 };
 

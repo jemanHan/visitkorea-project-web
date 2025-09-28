@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { api } from '../api/http';
 
 export interface User {
   id: string;
@@ -52,20 +53,15 @@ export const useAuth = () => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      
-      // TODO: 실제 로그인 API 호출
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // });
-      
-      // 임시 로그인 로직 (실제로는 API 호출)
-      if (email && password) {
+      // 실제 로그인 API 호출 (환경별 베이스 URL/헤더 공통 적용)
+      const data = await api('/v1/auth/login', {
+        method: 'POST',
+        body: { email, password }
+      });
         const user: User = {
-          id: '1',
-          name: email.split('@')[0], // 임시로 이메일에서 이름 추출
-          email: email
+          id: data.user.id,
+          name: data.user.displayName || email.split('@')[0],
+          email: data.user.email
         };
         
         const newAuthState: AuthState = {
@@ -74,11 +70,14 @@ export const useAuth = () => {
           isLoading: false
         };
         
+        // JWT 토큰을 vk_token 키로도 저장 (API 호출용)
+        if (data.token) {
+          localStorage.setItem('vk_token', data.token);
+        }
+        
         saveAuthState(newAuthState);
         return true;
-      }
       
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
@@ -90,20 +89,15 @@ export const useAuth = () => {
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      
-      // TODO: 실제 회원가입 API 호출
-      // const response = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, password })
-      // });
-      
-      // 임시 회원가입 로직 (실제로는 API 호출)
-      if (name && email && password) {
+      // 실제 회원가입 API 호출 (환경별 베이스 URL/헤더 공통 적용)
+      const data = await api('/v1/auth/signup', {
+        method: 'POST',
+        body: { email, password, displayName: name }
+      });
         const user: User = {
-          id: Date.now().toString(), // 임시 ID 생성
-          name,
-          email
+          id: data.user.id,
+          name: data.user.displayName || name,
+          email: data.user.email
         };
         
         const newAuthState: AuthState = {
@@ -112,11 +106,14 @@ export const useAuth = () => {
           isLoading: false
         };
         
+        // JWT 토큰을 vk_token 키로도 저장 (API 호출용)
+        if (data.token) {
+          localStorage.setItem('vk_token', data.token);
+        }
+        
         saveAuthState(newAuthState);
         return true;
-      }
       
-      return false;
     } catch (error) {
       console.error('Signup error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
@@ -134,6 +131,7 @@ export const useAuth = () => {
     
     saveAuthState(newAuthState);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('vk_token'); // JWT 토큰도 제거
   };
 
   return {

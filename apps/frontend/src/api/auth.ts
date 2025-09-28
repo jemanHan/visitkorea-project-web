@@ -1,4 +1,5 @@
 import { api } from './http.js';
+import { API_CONFIG } from '../config/api.js';
 
 export interface SignupData {
   email: string;
@@ -21,14 +22,14 @@ export interface AuthResponse {
 }
 
 export async function signup(data: SignupData): Promise<AuthResponse> {
-  return api('/v1/auth/signup', {
+  return api(API_CONFIG.ENDPOINTS.AUTH.SIGNUP, {
     method: 'POST',
     body: data
   });
 }
 
 export async function login(data: LoginData): Promise<AuthResponse> {
-  return api('/v1/auth/login', {
+  return api(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
     method: 'POST',
     body: data
   });
@@ -45,6 +46,10 @@ export function getToken(): string | null {
 
 export function isAuthenticated(): boolean {
   return !!getToken();
+}
+
+export function clearToken(): void {
+  localStorage.removeItem('vk_token');
 }
 
 

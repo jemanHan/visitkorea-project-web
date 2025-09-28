@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MonthCalendarProps {
   onDateSelect?: (date: Date) => void;
+  selectedDate?: Date;
 }
 
-const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
+const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect, selectedDate }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { t, i18n } = useTranslation();
 
   // 현재 월의 첫 번째 날과 마지막 날 계산
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -51,8 +54,20 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
     return date.getMonth() === currentDate.getMonth();
   };
 
-  // 요일 헤더
-  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+  // 선택된 날짜인지 확인
+  const isSelectedDate = (date: Date) => {
+    if (!selectedDate) return false;
+    return date.getDate() === selectedDate.getDate() &&
+           date.getMonth() === selectedDate.getMonth() &&
+           date.getFullYear() === selectedDate.getFullYear();
+  };
+
+  // 요일 헤더 - 현지화
+  const getWeekdayLabels = (lang: string) => {
+    const base = new Date(2021, 7, 1); // Sunday
+    return Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(base.getFullYear(), base.getMonth(), base.getDate() + i)));
+  };
+  const weekDays = getWeekdayLabels(i18n.language || 'ko');
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -60,20 +75,20 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={goToPreviousMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         
-        <h2 className="text-2xl font-bold text-gray-800">
-          {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          {new Intl.DateTimeFormat(i18n.language || 'ko', { year: 'numeric', month: 'long' }).format(currentDate)}
         </h2>
         
         <button
           onClick={goToNextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -82,14 +97,14 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
       </div>
 
       {/* 달력 그리드 */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 overflow-hidden">
         {/* 요일 헤더 */}
-        <div className="grid grid-cols-7 bg-gray-50">
+        <div className="grid grid-cols-7 bg-gray-100 border-b-2 border-gray-300">
           {weekDays.map((day, index) => (
             <div
               key={day}
-              className={`p-4 text-center font-medium text-sm ${
-                index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-700'
+              className={`p-4 text-center font-bold text-sm border-r border-gray-300 last:border-r-0 ${
+                index === 0 ? 'text-red-600' : index === 6 ? 'text-blue-600' : 'text-gray-800'
               }`}
             >
               {day}
@@ -103,35 +118,46 @@ const MonthCalendar: React.FC<MonthCalendarProps> = ({ onDateSelect }) => {
             <div
               key={index}
               onClick={() => onDateSelect?.(date)}
-              className={`
-                min-h-[80px] p-2 border-r border-b border-gray-200 cursor-pointer
-                hover:bg-gray-50 transition-colors
-                ${!isCurrentMonth(date) ? 'bg-gray-50 text-gray-400' : 'bg-white'}
-                ${isToday(date) ? 'bg-blue-50 border-blue-200' : ''}
-              `}
+              className="h-12 p-1 border-r border-b border-gray-300 cursor-pointer hover:bg-gray-50 transition-all duration-200 flex items-center justify-center"
+              style={{
+                backgroundColor: !isCurrentMonth(date) 
+                  ? '#f9fafb' 
+                  : isSelectedDate(date) 
+                    ? '#93c5fd' 
+                    : isToday(date) 
+                      ? '#86efac' 
+                      : '#ffffff'
+              }}
             >
-              <div className="flex items-center justify-between">
-                <span
-                  className={`
-                    text-sm font-medium
-                    ${isToday(date) ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}
-                    ${!isCurrentMonth(date) ? 'text-gray-400' : 'text-gray-700'}
-                  `}
-                >
-                  {date.getDate()}
-                </span>
-                
-              </div>
+              <span
+                className="text-sm font-medium w-8 h-8 flex items-center justify-center rounded-full"
+                style={{
+                  color: !isCurrentMonth(date) 
+                    ? '#9ca3af' 
+                    : isSelectedDate(date) 
+                      ? '#1e40af' 
+                      : isToday(date) 
+                        ? '#166534' 
+                        : '#374151',
+                  fontWeight: isSelectedDate(date) || isToday(date) ? 'bold' : 'normal'
+                }}
+              >
+                {date.getDate()}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 달력 범례 */}
-      <div className="mt-4 flex items-center justify-center gap-6 text-sm text-gray-600">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-          <span>오늘</span>
+          <div className="w-3 h-3 bg-green-200/70 rounded"></div>
+          <span>{t('today') || '오늘'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-200/70 rounded"></div>
+          <span>{t('selectedDate') || '선택된 날짜'}</span>
         </div>
       </div>
     </div>

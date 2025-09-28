@@ -1,8 +1,8 @@
-const BASE = (import.meta as any).env.VITE_API_BASE_URL ?? "http://localhost:3002";
+import { placesApi } from './apiClient';
+import i18n from '../i18n';
 
-// API 호출 캐싱을 위한 Map
-const apiCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 30000; // 30초
+// 상대 경로('/api')가 들어올 수 있으므로 URL()의 base로 사용하지 않는다
+const API_PREFIX: string = (import.meta as any).env.VITE_API_BASE_URL || '/api';
 
 export type PlaceLite = {
   id: string;
@@ -14,31 +14,10 @@ export type PlaceLite = {
   location?: { latitude?: number; longitude?: number };
 };
 
-// 캐시된 fetch 함수
-async function cachedFetch(url: string, options?: RequestInit) {
-  const cacheKey = `${url}-${JSON.stringify(options)}`;
-  const now = Date.now();
-  const cached = apiCache.get(cacheKey);
-  
-  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-    return cached.data;
-  }
-  
-  const response = await fetch(url, { ...options, cache: "no-store" });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  
-  const data = await response.json();
-  apiCache.set(cacheKey, { data, timestamp: now });
-  
-  // 캐시 크기 제한 (최대 50개)
-  if (apiCache.size > 50) {
-    const entries = Array.from(apiCache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toDelete = entries.slice(0, apiCache.size - 50);
-    toDelete.forEach(([key]) => apiCache.delete(key));
-  }
-  
-  return data;
+// 간소화된 fetch 함수 - apiClient 사용
+async function cachedFetch(endpoint: string, options?: RequestInit) {
+  // placesApi는 내부적으로 BASE를 붙이므로 여기서는 순수 endpoint만 전달
+  return await placesApi.request(endpoint, options);
 }
 
 export async function searchPlaces(params: {
@@ -46,55 +25,49 @@ export async function searchPlaces(params: {
   minRating?: number; minReviews?: number;
   sort?: "score"|"rating"|"reviews";
   onlyTourism?: boolean;
-  theme?: string; region?: string;
-  limit?: number;
+  region?: string;
+  page?: number; limit?: number;
+  language?: string;
 }) {
-  const u = new URL("/v1/search", BASE);
-  if (params.q) u.searchParams.set("q", params.q);
-  if (params.lat && params.lng) { u.searchParams.set("lat", String(params.lat)); u.searchParams.set("lng", String(params.lng)); }
-  if (params.minRating) u.searchParams.set("minRating", String(params.minRating));
-  if (params.minReviews) u.searchParams.set("minReviews", String(params.minReviews));
-  if (params.sort) u.searchParams.set("sort", params.sort);
-  if (params.theme) u.searchParams.set("theme", params.theme);
-  if (params.region) u.searchParams.set("region", params.region);
-  if (params.onlyTourism !== undefined) u.searchParams.set("onlyTourism", String(params.onlyTourism));
+  const sp = new URLSearchParams();
+  if (params.q) sp.set('q', params.q);
+  if (params.lat && params.lng) { sp.set('lat', String(params.lat)); sp.set('lng', String(params.lng)); }
+  if (params.minRating) sp.set('minRating', String(params.minRating));
+  if (params.minReviews) sp.set('minReviews', String(params.minReviews));
+  if (params.sort) sp.set('sort', params.sort);
+  if (params.region) sp.set('region', params.region);
+  if (params.onlyTourism !== undefined) sp.set('onlyTourism', String(params.onlyTourism));
+  if (params.page) sp.set('page', String(params.page));
+  if (params.limit) sp.set('limit', String(params.limit));
   
-  const arr = await cachedFetch(u.toString());
-  const list = Array.isArray(arr) ? arr : (arr?.places ?? []);
-  return params.limit ? list.slice(0, params.limit) : list;
-}
+  // Always set language - use provided language or fallback to i18n.language
+  const lang = (params.language || i18n.language || 'ko').split('-')[0];
+  sp.set('language', lang);
 
-export async function fetchRegions() {
-  return cachedFetch(`${BASE}/v1/regions`) as Promise<string[]>;
+  const endpoint = `/v1/search${sp.toString() ? `?${sp.toString()}` : ''}`;
+  const result = await cachedFetch(endpoint);
+  
+  // 새로운 페이지네이션 응답 형식 처리
+  if (result?.data && result?.pagination) {
+    return result;
+  }
+  
+  // 기존 응답 형식 호환성 유지
+  const list = Array.isArray(result) ? result : (result?.places ?? []);
+  return { data: list, pagination: null };
 }
 
 export async function autocomplete(input: string) {
-  const u = new URL("/v1/autocomplete", BASE);
-  u.searchParams.set("input", input);
-  return cachedFetch(u.toString()) as Promise<Array<{id:string,text:string}>>;
+  const sp = new URLSearchParams();
+  sp.set('input', input);
+  const endpoint = `/v1/autocomplete?${sp.toString()}`;
+  return cachedFetch(endpoint) as Promise<Array<{id:string,text:string}>>;
 }
 
-export function photoUrl(placeId: string, photoName?: string, maxWidthPx = 1200) {
+export function photoUrl(placeId: string, photoName?: string, maxWidthPx = 600) {
   if (!photoName) return null;
-  const u = new URL(`/v1/places/${encodeURIComponent(placeId)}/photos/media`, BASE);
-  u.searchParams.set("name", photoName);
-  u.searchParams.set("maxWidthPx", String(maxWidthPx));
-  return u.toString();
-}
-
-export async function fetchNearbyPlaces(params: {
-  lat: number;
-  lng: number;
-  category: string;
-  radius: number;
-  limit?: number;
-}) {
-  const u = new URL("/v1/nearby", BASE);
-  u.searchParams.set("lat", String(params.lat));
-  u.searchParams.set("lng", String(params.lng));
-  u.searchParams.set("category", params.category);
-  u.searchParams.set("radius", String(params.radius));
-  if (params.limit) u.searchParams.set("limit", String(params.limit));
-  
-  return cachedFetch(u.toString()) as Promise<PlaceLite[]>;
+  const sp = new URLSearchParams();
+  sp.set('name', photoName);
+  sp.set('maxWidthPx', String(maxWidthPx));
+  return `${API_PREFIX}/v1/places/${encodeURIComponent(placeId)}/photos/media?${sp.toString()}`;
 }
